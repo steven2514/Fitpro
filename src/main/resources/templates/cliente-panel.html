@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitPro - Mi Panel</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <span>💪</span>
+            <span>FitPro - Mi Panel</span>
+        </div>
+        <div class="navbar-user">
+            <span th:text="${cliente != null ? cliente.nombre + ' ' + cliente.apellido : 'Cliente'}">Cliente</span>
+            <a href="/logout" class="btn btn-danger btn-sm">🚪 Salir</a>
+        </div>
+    </nav>
+
+
+    <div class="panel-content">
+        <div class="container-large">
+
+
+            <div class="section">
+                <h2 class="section-title">👤 Mi Información Personal</h2>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="grid grid-3">
+                            <!-- Datos personales -->
+                            <div class="info-box">
+                                <h4>📋 Datos Personales</h4>
+                                <p><strong>Nombre:</strong> <span
+                                        th:text="${cliente.nombre + ' ' + cliente.apellido}">Nombre</span></p>
+                                <p><strong>Documento:</strong> <span th:text="${cliente.documento}">Documento</span></p>
+                                <p><strong>Teléfono:</strong> <span th:text="${cliente.telefono}">Teléfono</span></p>
+                            </div>
+
+                            <!-- Contacto -->
+                            <div class="info-box">
+                                <h4>📧 Contacto</h4>
+                                <p><strong>Email:</strong> <span
+                                        th:text="${cliente.email != null ? cliente.email : 'No registrado'}">Email</span>
+                                </p>
+                                <p><strong>Dirección:</strong> <span
+                                        th:text="${cliente.direccion != null ? cliente.direccion : 'No registrada'}">Dirección</span>
+                                </p>
+                            </div>
+
+                            <!-- Estado -->
+                            <div class="info-box">
+                                <h4>📊 Estado</h4>
+                                <p><strong>ID Cliente:</strong> <span th:text="${cliente.idCliente}">ID</span></p>
+                                <p><strong>Rutinas:</strong> <span
+                                        th:text="${rutinas != null ? #lists.size(rutinas) : 0}">0</span></p>
+                                <p><strong>Planes:</strong> <span
+                                        th:text="${alimentaciones != null ? #lists.size(alimentaciones) : 0}">0</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 MIS DATOS FÍSICOS (US-011)
+            ========================================== -->
+            <div class="section">
+                <h2 class="section-title">📊 Mis Datos Físicos</h2>
+
+                <!-- Mensajes de éxito/error -->
+                <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+                <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <form action="/cliente/actualizar-datos-fisicos" method="post">
+                            <div class="grid grid-3">
+                                <div class="form-group">
+                                    <label>⚖️ Peso (kg) *</label>
+                                    <input type="number" name="peso" step="0.1" th:value="${cliente.peso}"
+                                        placeholder="Ej: 70.5" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>📏 Altura (m) *</label>
+                                    <input type="number" name="altura" step="0.01" th:value="${cliente.altura}"
+                                        placeholder="Ej: 1.75" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>🎂 Edad *</label>
+                                    <input type="number" name="edad" th:value="${cliente.edad}" placeholder="Ej: 25"
+                                        required>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-2">
+                                <div class="form-group">
+                                    <label>👤 Género *</label>
+                                    <select name="genero" required>
+                                        <option value="">Seleccione su género</option>
+                                        <option value="Masculino" th:selected="${cliente.genero == 'Masculino'}">
+                                            Masculino
+                                        </option>
+                                        <option value="Femenino" th:selected="${cliente.genero == 'Femenino'}">
+                                            Femenino
+                                        </option>
+                                        <option value="Otro" th:selected="${cliente.genero == 'Otro'}">
+                                            Otro
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>🏃 Nivel de Actividad *</label>
+                                    <select name="nivelActividad" required>
+                                        <option value="">Seleccione nivel</option>
+                                        <option value="Sedentario"
+                                            th:selected="${cliente.nivelActividad == 'Sedentario'}">
+                                            Sedentario (poco o ningún ejercicio)
+                                        </option>
+                                        <option value="Ligero" th:selected="${cliente.nivelActividad == 'Ligero'}">
+                                            Ligero (1-3 días/semana)
+                                        </option>
+                                        <option value="Moderado" th:selected="${cliente.nivelActividad == 'Moderado'}">
+                                            Moderado (3-5 días/semana)
+                                        </option>
+                                        <option value="Activo" th:selected="${cliente.nivelActividad == 'Activo'}">
+                                            Activo (6-7 días/semana)
+                                        </option>
+                                        <option value="Muy Activo"
+                                            th:selected="${cliente.nivelActividad == 'Muy Activo'}">
+                                            Muy Activo (ejercicio intenso diario)
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>🎯 Objetivo Fitness *</label>
+                                <input type="text" name="objetivoFitness" th:value="${cliente.objetivoFitness}"
+                                    placeholder="Ej: Perder peso, Ganar masa muscular, Tonificar" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block">
+                                💾 Guardar Datos Físicos
+                            </button>
+                        </form>
+
+                        <!-- Mostrar IMC y estadísticas si hay datos -->
+                        <div th:if="${cliente.peso != null and cliente.altura != null}" class="mt-20">
+                            <h3 style="margin-bottom: 20px;">📈 Tus Estadísticas</h3>
+                            <div class="grid grid-3">
+                                <div class="stats-card"
+                                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                    <p>Tu IMC</p>
+                                    <h3
+                                        th:text="${#numbers.formatDecimal(cliente.peso / (cliente.altura * cliente.altura), 1, 2)}">
+                                        0.00
+                                    </h3>
+                                </div>
+                                <div class="stats-card" th:style="${cliente.peso / (cliente.altura * cliente.altura) < 18.5 ? 'background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);' : 
+                                               (cliente.peso / (cliente.altura * cliente.altura) < 25 ? 'background: linear-gradient(135deg, #10b981 0%, #059669 100%);' : 
+                                               (cliente.peso / (cliente.altura * cliente.altura) < 30 ? 'background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);' : 
+                                               'background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);'))}">
+                                    <p>Categoría</p>
+                                    <h3 style="font-size: 18px;"
+                                        th:text="${cliente.peso / (cliente.altura * cliente.altura) < 18.5 ? 'Bajo Peso' : 
+                                                 (cliente.peso / (cliente.altura * cliente.altura) < 25 ? 'Peso Normal' : 
+                                                 (cliente.peso / (cliente.altura * cliente.altura) < 30 ? 'Sobrepeso' : 'Obesidad'))}">
+                                        Normal
+                                    </h3>
+                                </div>
+                                <div class="stats-card"
+                                    style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);">
+                                    <p>Peso Ideal</p>
+                                    <h3
+                                        th:text="${#numbers.formatDecimal(22.5 * (cliente.altura * cliente.altura), 1, 1)} + ' kg'">
+                                        70 kg
+                                    </h3>
+                                </div>
+                            </div>
+
+                            <div class="info-box mt-20">
+                                <h4>ℹ️ Información sobre tu IMC</h4>
+                                <p><strong>Bajo peso:</strong> IMC menor a 18.5</p>
+                                <p><strong>Peso normal:</strong> IMC entre 18.5 y 24.9</p>
+                                <p><strong>Sobrepeso:</strong> IMC entre 25 y 29.9</p>
+                                <p><strong>Obesidad:</strong> IMC mayor a 30</p>
+                                <p style="margin-top: 10px; color: #888; font-size: 13px;">
+                                    * El peso ideal se calcula usando un IMC de 22.5 (punto medio del rango saludable)
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Mensaje si no hay datos -->
+                        <div th:if="${cliente.peso == null or cliente.altura == null}" class="info-box mt-20">
+                            <h4>📋 Completa tus datos físicos</h4>
+                            <p>
+                                Registra tu información física para que podamos brindarte
+                                recomendaciones personalizadas y hacer seguimiento de tu progreso.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="section">
+                <h2 class="section-title">🏋️ Mis Rutinas de Entrenamiento</h2>
+
+                <!-- Si no hay rutinas -->
+                <div th:if="${rutinas == null or #lists.isEmpty(rutinas)}" class="card">
+                    <div class="card-body text-center">
+                        <p style="color: #888; font-size: 18px; padding: 40px;">
+                            ⚠️ Aún no tienes rutinas asignadas
+                        </p>
+                        <p style="color: #666;">
+                            Contacta a tu entrenador para que te asigne una rutina personalizada
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Si hay rutinas -->
+                <div th:if="${rutinas != null and not #lists.isEmpty(rutinas)}" class="grid grid-2">
+                    <div class="card" th:each="rutina : ${rutinas}">
+                        <div class="card-header">
+                            <h3 class="card-title" th:text="${rutina.nombre}">Nombre Rutina</h3>
+                            <span class="badge badge-primary" th:text="${rutina.nivel}">Nivel</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="item-list">
+                                <div class="item">
+                                    <p class="item-title">🎯 Objetivo</p>
+                                    <p class="item-detail" th:text="${rutina.objetivo}">Objetivo</p>
+                                </div>
+                                <div class="item">
+                                    <p class="item-title">📈 Nivel</p>
+                                    <p class="item-detail" th:text="${rutina.nivel}">Nivel</p>
+                                </div>
+                                <div class="item">
+                                    <p class="item-title">💡 Recomendaciones</p>
+                                    <p class="item-detail">
+                                        • Realiza calentamiento antes de empezar<br>
+                                        • Mantén una postura correcta<br>
+                                        • Hidrátate constantemente<br>
+                                        • Descansa entre series
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta de bienestar -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">🧘 Bienestar Mental</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul style="line-height: 2; color: #666;">
+                                <li>Practica meditación o mindfulness</li>
+                                <li>Mantén una actitud positiva</li>
+                                <li>Celebra tus logros, por pequeños que sean</li>
+                                <li>Rodéate de personas que te apoyen</li>
+                                <li>La salud mental es tan importante como la física</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 MI PLAN ALIMENTICIO
+            ========================================== -->
+            <div class="section">
+                <h2 class="section-title">🍎 Mi Plan Alimenticio</h2>
+
+                <!-- Si no hay alimentación -->
+                <div th:if="${alimentaciones == null or #lists.isEmpty(alimentaciones)}" class="card">
+                    <div class="card-body text-center">
+                        <p style="color: #888; font-size: 18px; padding: 40px;">
+                            ⚠️ Aún no tienes plan alimenticio asignado
+                        </p>
+                        <p style="color: #666;">
+                            Consulta con tu nutricionista para obtener un plan personalizado
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Si hay alimentación -->
+                <div th:if="${alimentaciones != null and not #lists.isEmpty(alimentaciones)}">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="grid grid-3">
+                                <div class="stats-card"
+                                    style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                                    <p>Total de Comidas</p>
+                                    <h3 th:text="${#lists.size(alimentaciones)}">0</h3>
+                                </div>
+                                <div class="stats-card"
+                                    style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                                    <p>Calorías Totales</p>
+                                    <h3 th:text="${#aggregates.sum(alimentaciones.![calorias])} + ' kcal'">0</h3>
+                                </div>
+                                <div class="stats-card"
+                                    style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);">
+                                    <p>Tipos de Comida</p>
+                                    <h3 th:text="${#sets.size(#sets.toSet(alimentaciones.![tipoComida]))}">0</h3>
+                                </div>
+                            </div>
+
+                            <!-- Detalle del plan -->
+                            <div class="mt-20">
+                                <h3 style="margin-bottom: 20px;">📋 Detalle del Plan</h3>
+                                <div class="item-list">
+                                    <div class="item" th:each="alimentacion : ${alimentaciones}">
+                                        <div class="flex-between">
+                                            <div>
+                                                <p class="item-title" th:text="${alimentacion.tipoComida}">Tipo</p>
+                                                <p class="item-detail" th:text="${alimentacion.descripcion}">Descripción
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <span class="badge badge-warning"
+                                                    th:text="${alimentacion.calorias + ' kcal'}">Calorías</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Consejos -->
+                            <div class="info-box mt-20">
+                                <h4>💡 Consejos Nutricionales</h4>
+                                <p>✓ Come cada 3-4 horas para mantener tu metabolismo activo</p>
+                                <p>✓ Bebe al menos 2 litros de agua al día</p>
+                                <p>✓ Incluye proteínas en cada comida</p>
+                                <p>✓ Consume frutas y verduras variadas</p>
+                                <p>✓ Evita alimentos procesados y azúcares refinados</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 MIS ENTRENADORES
+            ========================================== -->
+            <div class="section">
+                <h2 class="section-title">👨‍🏫 Mis Entrenadores</h2>
+
+                <!-- Si no hay entrenadores -->
+                <div th:if="${entrenadores == null or #lists.isEmpty(entrenadores)}" class="card">
+                    <div class="card-body text-center">
+                        <p style="color: #888; font-size: 18px; padding: 40px;">
+                            ⚠️ Aún no tienes entrenadores asignados
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Si hay entrenadores -->
+                <div th:if="${entrenadores != null and not #lists.isEmpty(entrenadores)}" class="grid grid-2">
+                    <div class="card" th:each="entrenador : ${entrenadores}">
+                        <div class="card-header">
+                            <h3 class="card-title" th:text="${entrenador.nombre}">Entrenador</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="item-list">
+                                <div class="item">
+                                    <p class="item-title">🎯 Especialidad</p>
+                                    <p class="item-detail" th:text="${entrenador.especialidad}">Especialidad</p>
+                                </div>
+                                <div class="item">
+                                    <p class="item-title">🕐 Horario</p>
+                                    <p class="item-detail" th:text="${entrenador.horario}">Horario</p>
+                                </div>
+                                <div class="item" th:if="${entrenador.email != null}">
+                                    <p class="item-title">📧 Email</p>
+                                    <p class="item-detail" th:text="${entrenador.email}">Email</p>
+                                </div>
+                                <div class="item" th:if="${entrenador.telefono != null}">
+                                    <p class="item-title">📞 Teléfono</p>
+                                    <p class="item-detail" th:text="${entrenador.telefono}">Teléfono</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                                         MIS CLASES
+                                    ========================================== -->
+            <div class="section">
+                <h2 class="section-title">📚 Mis Clases</h2>
+
+                <!-- Si no hay clases -->
+                <div th:if="${clases == null or #lists.isEmpty(clases)}" class="card">
+                    <div class="card-body text-center">
+                        <p style="color: #888; font-size: 18px; padding: 40px;">
+                            ⚠️ Aún no estás inscrito en ninguna clase
+                        </p>
+                        <p style="color: #666;">
+                            Consulta con el administrador para inscribirte en las clases disponibles
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Si hay clases -->
+                <div th:if="${clases != null and not #lists.isEmpty(clases)}" class="grid grid-2">
+                    <div class="card" th:each="clase : ${clases}">
+                        <div class="card-header">
+                            <h3 class="card-title" th:text="${clase.nombre}">Nombre Clase</h3>
+                            <span class="badge badge-success">Inscrito</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="item-list">
+                                <div class="item">
+                                    <p class="item-title">📝 Descripción</p>
+                                    <p class="item-detail" th:text="${clase.descripcion}">Descripción</p>
+                                </div>
+                                <div class="item">
+                                    <p class="item-title">👥 Capacidad</p>
+                                    <p class="item-detail" th:text="${clase.capacidad + ' personas'}">Capacidad</p>
+                                </div>
+                                <div class="item" th:if="${clase.entrenador != null}">
+                                    <p class="item-title">👨‍🏫 Entrenador</p>
+                                    <p class="item-detail" th:text="${clase.entrenador.nombre}">Entrenador</p>
+                                </div>
+                                <div class="item"
+                                    th:if="${clase.entrenador != null and clase.entrenador.especialidad != null}">
+                                    <p class="item-title">🎯 Especialidad</p>
+                                    <p class="item-detail" th:text="${clase.entrenador.especialidad}">Especialidad</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- ==========================================
+                 RECOMENDACIONES GENERALES
+            ========================================== -->
+            <div class="section">
+                <h2 class="section-title">💡 Recomendaciones Generales</h2>
+                <div class="grid grid-2">
+                    <!-- Ejercicio -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">🏃 Ejercicio</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul style="line-height: 2; color: #666;">
+                                <li>Entrena al menos 3-4 veces por semana</li>
+                                <li>Alterna ejercicios cardiovasculares y de fuerza</li>
+                                <li>Descansa adecuadamente entre sesiones</li>
+                                <li>Escucha a tu cuerpo y evita sobreentrenamiento</li>
+                                <li>Mantén una técnica correcta en cada ejercicio</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Descanso -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">😴 Descanso</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul style="line-height: 2; color: #666;">
+                                <li>Duerme entre 7-9 horas diarias</li>
+                                <li>Mantén un horario regular de sueño</li>
+                                <li>Evita pantallas antes de dormir</li>
+                                <li>Crea un ambiente tranquilo y oscuro</li>
+                                <li>El descanso es esencial para la recuperación</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Hidratación -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">💧 Hidratación</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul style="line-height: 2; color: #666;">
+                                <li>Bebe al menos 2-3 litros de agua al día</li>
+                                <li>Aumenta la ingesta durante el ejercicio</li>
+                                <li>No esperes a tener sed para beber</li>
+                                <li>Lleva siempre una botella contigo</li>
+                                <li>Evita bebidas azucaradas o gaseosas</li>
+                                <li>La orina clara indica buena hidratación</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 CONTACTO
+            ========================================== -->
+            <div class="section">
+                <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <div class="card-body text-center">
+                        <h3 style="color: white; margin-bottom: 15px;">¿Necesitas ayuda o asesoría?</h3>
+                        <p style="margin-bottom: 20px; opacity: 0.9;">
+                            Nuestro equipo de profesionales está listo para ayudarte a alcanzar tus objetivos
+                        </p>
+                        <div class="flex-center gap-20">
+                            <div>
+                                <p style="font-weight: bold;">📧 Email</p>
+                                <p>contacto@fitpro.com</p>
+                            </div>
+                            <div>
+                                <p style="font-weight: bold;">📞 Teléfono</p>
+                                <p>+57 300 123 4567</p>
+                            </div>
+                            <div>
+                                <p style="font-weight: bold;">⏰ Horario</p>
+                                <p>Lun - Vie: 6am - 10pm</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- container-large -->
+    </div> <!-- panel-content -->
+</body>
+
+</html>

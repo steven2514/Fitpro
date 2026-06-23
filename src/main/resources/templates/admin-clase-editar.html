@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Clase</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body class="centered">
+    <div class="container">
+        <a href="/admin/panel" class="back-link">← Volver al panel</a>
+        <h2>✏️ Editar Clase</h2>
+
+        <form th:action="@{/admin/clase/editar/{id}(id=${clase.idClase})}" method="post" th:object="${clase}">
+            <div class="form-group">
+                <label>Nombre *</label>
+                <input type="text" th:field="*{nombre}" required>
+            </div>
+
+            <div class="form-group">
+                <label>Descripción *</label>
+                <textarea th:field="*{descripcion}" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Capacidad *</label>
+                <input type="number" th:field="*{capacidad}" required>
+            </div>
+
+            <div class="form-group">
+                <label>Entrenador *</label>
+                <select name="idEntrenador" required>
+                    <option th:each="entrenador : ${entrenadores}" th:value="${entrenador.idEntrenador}"
+                        th:selected="${entrenador.idEntrenador == clase.entrenador.idEntrenador}"
+                        th:text="${entrenador.nombre}">
+                    </option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">💾 Guardar Cambios</button>
+        </form>
+    </div>
+</body>
+
+</html>

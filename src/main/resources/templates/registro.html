@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitPro - Registro</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body class="centered">
+    <div class="container">
+        <a href="/" class="back-link">← Volver al inicio</a>
+        <h2>Registro de Cliente</h2>
+
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+        <div th:if="${mensaje}" class="alert alert-success" th:text="${mensaje}"></div>
+
+        <form th:action="@{/registro}" method="post" th:object="${cliente}">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="nombre">Nombre *</label>
+                    <input type="text" id="nombre" th:field="*{nombre}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="apellido">Apellido *</label>
+                    <input type="text" id="apellido" th:field="*{apellido}" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="documento">Documento *</label>
+                <input type="text" id="documento" th:field="*{documento}" placeholder="Ej: 1001234567" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" th:field="*{email}" placeholder="correo@ejemplo.com">
+            </div>
+
+            <div class="form-group">
+                <label for="telefono">Teléfono *</label>
+                <input type="text" id="telefono" th:field="*{telefono}" placeholder="Ej: 3001234567" required>
+            </div>
+
+            <div class="form-group">
+                <label for="direccion">Dirección</label>
+                <input type="text" id="direccion" th:field="*{direccion}" placeholder="Ciudad o dirección">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Contraseña *</label>
+                <input type="password" id="password" th:field="*{password}" placeholder="Crea una contraseña" required>
+            </div>
+
+            <button type="submit" class="btn btn-secondary btn-block">Registrarse</button>
+        </form>
+
+        <p class="text-center mt-20">
+            ¿Ya tienes cuenta? <a href="/login">Inicia sesión aquí</a>
+        </p>
+        <p class="text-center mt-20">
+            ¿Ya tienes cuenta? <a href="/registroAdmin">Inicia sesión como admin</a>
+        </p>
+    </div>
+</body>
+
+</html>

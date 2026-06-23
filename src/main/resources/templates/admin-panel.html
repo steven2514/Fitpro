@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitPro - Panel Administrador</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-panel.css}">
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <span>💪</span>
+            <span>FitPro - Administrador</span>
+        </div>
+        <div class="navbar-user">
+            <span th:text="${admin != null ? admin.apellido : 'Admin'}">Admin</span>
+            <a href="/logout" class="btn btn-danger btn-sm">🚪 Salir</a>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="panel-content">
+        <div class="container-large">
+
+            <!-- ==========================================
+                 BUSCADOR DE CLIENTE POR DOCUMENTO
+            ========================================== -->
+            <div class="search-container">
+                <h2 style="margin-bottom: 20px;">🔍 Buscar Cliente por Documento</h2>
+                <form action="/admin/cliente/buscar" method="get" class="search-box">
+                    <div class="form-group" style="flex: 1; margin: 0;">
+                        <label>Documento del Cliente</label>
+                        <input type="text" name="documento" id="searchDocumento" th:value="${documentoBuscado}"
+                            placeholder="Ingrese el documento del cliente" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">🔍 Buscar</button>
+                    <a href="/admin/panel" class="btn btn-secondary">🔄 Limpiar</a>
+                </form>
+
+                <!-- Resultado de búsqueda exitosa -->
+                <div th:if="${clienteEncontrado != null}" class="search-result show">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">✅ Cliente Encontrado</h3>
+                    <div class="client-info-grid">
+                        <div class="client-info-item">
+                            <strong>Nombre:</strong>
+                            <span th:text="${clienteEncontrado.nombre + ' ' + clienteEncontrado.apellido}">-</span>
+                        </div>
+                        <div class="client-info-item">
+                            <strong>Documento:</strong>
+                            <span th:text="${clienteEncontrado.documento}">-</span>
+                        </div>
+                        <div class="client-info-item">
+                            <strong>Email:</strong>
+                            <span th:text="${clienteEncontrado.email ?: 'No registrado'}">-</span>
+                        </div>
+                        <div class="client-info-item">
+                            <strong>Teléfono:</strong>
+                            <span th:text="${clienteEncontrado.telefono}">-</span>
+                        </div>
+                        <div class="client-info-item">
+                            <strong>Dirección:</strong>
+                            <span th:text="${clienteEncontrado.direccion ?: 'No registrado'}">-</span>
+                        </div>
+                        <div class="client-info-item">
+                            <strong>Edad:</strong>
+                            <span th:text="${clienteEncontrado.edad ?: 'No registrado'}">-</span>
+                        </div>
+                        <div class="client-info-item">
+                            <strong>Peso:</strong>
+                            <span
+                                th:text="${clienteEncontrado.peso != null ? clienteEncontrado.peso + ' kg' : 'No registrado'}">-</span>
+                        </div>
+                        <div class="client-info-item">
+                            <strong>Altura:</strong>
+                            <span
+                                th:text="${clienteEncontrado.altura != null ? clienteEncontrado.altura + ' m' : 'No registrado'}">-</span>
+                        </div>
+
+                        <div class="client-info-item">
+                            <strong>IMC:</strong>
+                            <span th:if="${clienteEncontrado.peso != null and clienteEncontrado.altura != null}">
+                                <span th:text="${clienteEncontrado.IMCFormateado}">-</span>
+                                (<span th:text="${clienteEncontrado.obtenerCategoriaIMC()}"
+                                    th:style="'color: ' + ${clienteEncontrado.colorCategoriaIMC} + '; font-weight: bold;'">-</span>)
+                            </span>
+                            <span th:if="${clienteEncontrado.peso == null or clienteEncontrado.altura == null}">
+                                No calculado
+                            </span>
+                        </div>
+
+                        <div style="margin-top: 20px; display: flex; gap: 10px;">
+                            <a th:href="@{/admin/cliente/editar/{id}(id=${clienteEncontrado.idCliente})}"
+                                class="btn btn-primary">✏️ Editar Cliente</a>
+                        </div>
+                    </div>
+
+                    <!-- Cliente no encontrado -->
+                    <div th:if="${documentoBuscado != null and clienteEncontrado == null}"
+                        class="search-result-empty show">
+                        <strong>⚠️ No se encontró ningún cliente con el documento: </strong>
+                        <span th:text="${documentoBuscado}"></span>
+                        <p style="margin-top: 10px; color: #666;">Verifica que el documento sea correcto.</p>
+                    </div>
+                </div>
+
+                <!-- Estadísticas -->
+                <div class="grid grid-5 mb-20" style="margin-top: 100px;">
+                    <a href="#clientes-section" class="stats-card">
+                        <p>Total Clientes</p>
+                        <h3 th:text="${clientes != null ? #lists.size(clientes) : 0}">0</h3>
+                    </a>
+                    <a href="#rutinas-section" class="stats-card">
+                        <p>Total Rutinas</p>
+                        <h3 th:text="${rutinas != null ? #lists.size(rutinas) : 0}">0</h3>
+                    </a>
+                    <a href="#alimentacion-section" class="stats-card">
+                        <p>Total Alimentación</p>
+                        <h3 th:text="${alimentaciones != null ? #lists.size(alimentaciones) : 0}">0</h3>
+                    </a>
+                    <a href="#entrenadores-section" class="stats-card">
+                        <p>Total Entrenadores</p>
+                        <h3 th:text="${entrenadores != null ? #lists.size(entrenadores) : 0}">0</h3>
+                    </a>
+                    <a href="#clases-section" class="stats-card">
+                        <p>Total Clases</p>
+                        <h3 th:text="${clases != null ? #lists.size(clases) : 0}">0</h3>
+                    </a>
+                </div>
+
+                <!-- ==========================================
+                 ACORDEÓN: FORMULARIOS DE CREACIÓN
+            ========================================== -->
+                <div class="accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h3>➕ Formularios de Creación</h3>
+                        <span class="badge-count">6 formularios</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="grid grid-2" style="padding: 20px;">
+
+                            <!-- Crear Cliente -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">➕ Crear Cliente</h3>
+                                </div>
+                                <div class="card-body">
+                                    <form action="/admin/cliente/crear" method="post">
+                                        <div class="form-group">
+                                            <label>Nombre *</label>
+                                            <input type="text" name="nombre" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Apellido *</label>
+                                            <input type="text" name="apellido" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Documento *</label>
+                                            <input type="text" name="documento" required>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label>Email</label>
+                                                <input type="email" name="email">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Teléfono *</label>
+                                                <input type="text" name="telefono" required>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Dirección</label>
+                                            <input type="text" name="direccion">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-block">Crear Cliente</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Crear Rutina -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">🏋️ Crear Rutina</h3>
+                                </div>
+                                <div class="card-body">
+                                    <form action="/admin/rutina/crear" method="post">
+                                        <div class="form-group">
+                                            <label>Cliente *</label>
+                                            <select name="idCliente" required>
+                                                <option value="">Seleccione un cliente</option>
+                                                <option th:each="cliente : ${clientes}" th:value="${cliente.idCliente}"
+                                                    th:text="${cliente.nombre + ' ' + cliente.apellido}">
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Nombre de la rutina *</label>
+                                            <input type="text" name="nombre" placeholder="Ej: Rutina de cardio"
+                                                required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Objetivo *</label>
+                                            <input type="text" name="objetivo" placeholder="Ej: Aumentar masa muscular"
+                                                required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Nivel *</label>
+                                            <select name="nivel" required>
+                                                <option value="Básico">Básico</option>
+                                                <option value="Intermedio">Intermedio</option>
+                                                <option value="Avanzado">Avanzado</option>
+                                            </select>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-block">Crear Rutina</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Crear Plan Alimenticio -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">🍎 Crear Plan Alimenticio</h3>
+                                </div>
+                                <div class="card-body">
+                                    <form action="/admin/alimentacion/crear" method="post">
+                                        <div class="form-group">
+                                            <label>Cliente *</label>
+                                            <select name="idCliente" required>
+                                                <option value="">Seleccione un cliente</option>
+                                                <option th:each="cliente : ${clientes}" th:value="${cliente.idCliente}"
+                                                    th:text="${cliente.nombre + ' ' + cliente.apellido}">
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Tipo de comida *</label>
+                                            <select name="tipoComida" required>
+                                                <option value="Desayuno">Desayuno</option>
+                                                <option value="Media Mañana">Media Mañana</option>
+                                                <option value="Almuerzo">Almuerzo</option>
+                                                <option value="Merienda">Merienda</option>
+                                                <option value="Cena">Cena</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Calorías *</label>
+                                            <input type="number" name="calorias" placeholder="Ej: 350" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Descripción *</label>
+                                            <textarea name="descripcion"
+                                                placeholder="Ej: Avena con frutas y huevo cocido" required></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-block">Crear Plan</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Crear Entrenador -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">👨‍🏫 Crear Entrenador</h3>
+                                </div>
+                                <div class="card-body">
+                                    <form action="/admin/entrenador/crear" method="post">
+                                        <div class="form-group">
+                                            <label>Nombre *</label>
+                                            <input type="text" name="nombre" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Especialidad *</label>
+                                            <input type="text" name="especialidad" placeholder="Ej: Musculación"
+                                                required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Horario *</label>
+                                            <input type="text" name="horario" placeholder="Ej: Lunes a Viernes 8am-2pm"
+                                                required>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label>Email</label>
+                                                <input type="email" name="email">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Teléfono</label>
+                                                <input type="text" name="telefono">
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-block">Crear
+                                            Entrenador</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Crear Clase -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">📚 Crear Clase</h3>
+                                </div>
+                                <div class="card-body">
+                                    <form action="/admin/clase/crear" method="post">
+                                        <div class="form-group">
+                                            <label>Nombre de la clase *</label>
+                                            <input type="text" name="nombre" placeholder="Ej: Cardio Básico" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Descripción *</label>
+                                            <textarea name="descripcion" placeholder="Descripción de la clase"
+                                                required></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Capacidad *</label>
+                                            <input type="number" name="capacidad" placeholder="Ej: 15" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Entrenador *</label>
+                                            <select name="idEntrenador" required>
+                                                <option value="">Seleccione un entrenador</option>
+                                                <option th:each="entrenador : ${entrenadores}"
+                                                    th:value="${entrenador.idEntrenador}"
+                                                    th:text="${entrenador.nombre}">
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-block">Crear Clase</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Inscribir Cliente en Clase -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">✅ Inscribir Cliente en Clase</h3>
+                                </div>
+                                <div class="card-body">
+                                    <form action="/admin/clase/inscribir" method="post">
+                                        <div class="form-group">
+                                            <label>Cliente *</label>
+                                            <select name="idCliente" required>
+                                                <option value="">Seleccione un cliente</option>
+                                                <option th:each="cliente : ${clientes}" th:value="${cliente.idCliente}"
+                                                    th:text="${cliente.nombre + ' ' + cliente.apellido + ' (Doc: ' + cliente.documento + ')'}">
+                                                </option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Clase *</label>
+                                            <select name="idClase" required>
+                                                <option value="">Seleccione una clase</option>
+                                                <option th:each="clase : ${clases}" th:value="${clase.idClase}"
+                                                    th:text="${clase.nombre + ' - ' + (clase.entrenador != null ? clase.entrenador.nombre : 'Sin entrenador')}">
+                                                </option>
+                                            </select>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-primary btn-block">✅ Inscribir
+                                            Cliente</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                 ACORDEÓN: LISTA DE CLIENTES
+            ========================================== -->
+                <div id="clientes-section" class="accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h3>👥 Lista de Clientes</h3>
+                        <span class="badge-count"
+                            th:text="${clientes != null ? #lists.size(clientes) + ' clientes' : '0 clientes'}">0
+                            clientes</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="card" style="margin: 20px;">
+                            <div class="card-body">
+                                <div th:if="${clientes == null or #lists.isEmpty(clientes)}" class="text-center">
+                                    <p>No hay clientes registrados</p>
+                                </div>
+                                <table th:if="${clientes != null and not #lists.isEmpty(clientes)}">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Nombre</th>
+                                            <th>Documento</th>
+                                            <th>Email</th>
+                                            <th>Teléfono</th>
+                                            <th>Dirección</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="cliente : ${clientes}">
+                                            <td th:text="${cliente.idCliente}">1</td>
+                                            <td th:text="${cliente.nombre + ' ' + cliente.apellido}">Nombre</td>
+                                            <td th:text="${cliente.documento}">Doc</td>
+                                            <td th:text="${cliente.email}">Email</td>
+                                            <td th:text="${cliente.telefono}">Tel</td>
+                                            <td th:text="${cliente.direccion}">Dir</td>
+                                            <td>
+                                                <a th:href="@{/admin/cliente/editar/{id}(id=${cliente.idCliente})}"
+                                                    class="btn btn-primary btn-sm">✏️ Editar</a>
+                                                <form
+                                                    th:action="@{/admin/cliente/eliminar/{id}(id=${cliente.idCliente})}"
+                                                    method="post" style="display:inline;"
+                                                    onsubmit="return confirm('¿Estás seguro de eliminar este cliente?');">
+                                                    <button type="submit" class="btn btn-danger btn-sm">🗑️
+                                                        Eliminar</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                 ACORDEÓN: LISTA DE RUTINAS
+            ========================================== -->
+                <div id="rutinas-section" class="accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h3>🏋️ Lista de Rutinas</h3>
+                        <span class="badge-count"
+                            th:text="${rutinas != null ? #lists.size(rutinas) + ' rutinas' : '0 rutinas'}">0
+                            rutinas</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="card" style="margin: 20px;">
+                            <div class="card-body">
+                                <div th:if="${rutinas == null or #lists.isEmpty(rutinas)}" class="text-center">
+                                    <p>No hay rutinas creadas</p>
+                                </div>
+                                <table th:if="${rutinas != null and not #lists.isEmpty(rutinas)}">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Cliente</th>
+                                            <th>Nombre</th>
+                                            <th>Objetivo</th>
+                                            <th>Nivel</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="rutina : ${rutinas}">
+                                            <td th:text="${rutina.idRutina}">1</td>
+                                            <td
+                                                th:text="${rutina.cliente != null ? rutina.cliente.nombre + ' ' + rutina.cliente.apellido : 'N/A'}">
+                                                Cliente</td>
+                                            <td th:text="${rutina.nombre}">Nombre</td>
+                                            <td th:text="${rutina.objetivo}">Objetivo</td>
+                                            <td><span class="badge badge-primary" th:text="${rutina.nivel}">Nivel</span>
+                                            </td>
+                                            <td>
+                                                <a th:href="@{/admin/rutina/editar/{id}(id=${rutina.idRutina})}"
+                                                    class="btn btn-primary btn-sm">✏️ Editar</a>
+                                                <form th:action="@{/admin/rutina/eliminar/{id}(id=${rutina.idRutina})}"
+                                                    method="post" style="display:inline;"
+                                                    onsubmit="return confirm('¿Estás seguro de eliminar esta rutina?');">
+                                                    <button type="submit" class="btn btn-danger btn-sm">🗑️
+                                                        Eliminar</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                 ACORDEÓN: PLANES ALIMENTICIOS
+            ========================================== -->
+                <div id="alimentacion-section" class="accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h3>🍎 Planes Alimenticios</h3>
+                        <span class="badge-count"
+                            th:text="${alimentaciones != null ? #lists.size(alimentaciones) + ' planes' : '0 planes'}">0
+                            planes</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="card" style="margin: 20px;">
+                            <div class="card-body">
+                                <div th:if="${alimentaciones == null or #lists.isEmpty(alimentaciones)}"
+                                    class="text-center">
+                                    <p>No hay planes alimenticios creados</p>
+                                </div>
+                                <table th:if="${alimentaciones != null and not #lists.isEmpty(alimentaciones)}">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Cliente</th>
+                                            <th>Tipo de Comida</th>
+                                            <th>Calorías</th>
+                                            <th>Descripción</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="alimentacion : ${alimentaciones}">
+                                            <td th:text="${alimentacion.idAlimentacion}">1</td>
+                                            <td
+                                                th:text="${alimentacion.cliente != null ? alimentacion.cliente.nombre + ' ' + alimentacion.cliente.apellido : 'N/A'}">
+                                                Cliente</td>
+                                            <td th:text="${alimentacion.tipoComida}">Tipo</td>
+                                            <td th:text="${alimentacion.calorias + ' kcal'}">Cal</td>
+                                            <td th:text="${alimentacion.descripcion}">Desc</td>
+                                            <td>
+                                                <a th:href="@{/admin/alimentacion/editar/{id}(id=${alimentacion.idAlimentacion})}"
+                                                    class="btn btn-primary btn-sm">✏️ Editar</a>
+                                                <form
+                                                    th:action="@{/admin/alimentacion/eliminar/{id}(id=${alimentacion.idAlimentacion})}"
+                                                    method="post" style="display:inline;"
+                                                    onsubmit="return confirm('¿Estás seguro de eliminar este plan?');">
+                                                    <button type="submit" class="btn btn-danger btn-sm">🗑️
+                                                        Eliminar</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                 ACORDEÓN: LISTA DE ENTRENADORES
+            ========================================== -->
+                <div id="entrenadores-section" class="accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h3>👨‍🏫 Lista de Entrenadores</h3>
+                        <span class="badge-count"
+                            th:text="${entrenadores != null ? #lists.size(entrenadores) + ' entrenadores' : '0 entrenadores'}">0
+                            entrenadores</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="card" style="margin: 20px;">
+                            <div class="card-body">
+                                <div th:if="${entrenadores == null or #lists.isEmpty(entrenadores)}"
+                                    class="text-center">
+                                    <p>No hay entrenadores registrados</p>
+                                </div>
+                                <table th:if="${entrenadores != null and not #lists.isEmpty(entrenadores)}">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Nombre</th>
+                                            <th>Especialidad</th>
+                                            <th>Horario</th>
+                                            <th>Contacto</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="entrenador : ${entrenadores}">
+                                            <td th:text="${entrenador.idEntrenador}">1</td>
+                                            <td th:text="${entrenador.nombre}">Nombre</td>
+                                            <td th:text="${entrenador.especialidad}">Especialidad</td>
+                                            <td th:text="${entrenador.horario}">Horario</td>
+                                            <td
+                                                th:text="${entrenador.email != null ? entrenador.email : entrenador.telefono}">
+                                                Contacto</td>
+                                            <td>
+                                                <a th:href="@{/admin/entrenador/editar/{id}(id=${entrenador.idEntrenador})}"
+                                                    class="btn btn-primary btn-sm">✏️ Editar</a>
+                                                <form
+                                                    th:action="@{/admin/entrenador/eliminar/{id}(id=${entrenador.idEntrenador})}"
+                                                    method="post" style="display:inline;"
+                                                    onsubmit="return confirm('¿Estás seguro de eliminar este entrenador?');">
+                                                    <button type="submit" class="btn btn-danger btn-sm">🗑️
+                                                        Eliminar</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                 ACORDEÓN: LISTA DE CLASES
+            ========================================== -->
+                <div id="clases-section" class="accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h3>📚 Lista de Clases</h3>
+                        <span class="badge-count"
+                            th:text="${clases != null ? #lists.size(clases) + ' clases' : '0 clases'}">0 clases</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+
+                    <div class="accordion-content">
+                        <div class="card" style="margin: 20px;">
+                            <div class="card-body">
+                                <div th:if="${clases == null or #lists.isEmpty(clases)}" class="text-center">
+                                    <p>No hay clases creadas</p>
+                                </div>
+                                <table th:if="${clases != null and not #lists.isEmpty(clases)}">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Nombre</th>
+                                            <th>Descripción</th>
+                                            <th>Capacidad</th>
+                                            <th>Entrenador</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="clase : ${clases}">
+                                            <td th:text="${clase.idClase}">1</td>
+                                            <td th:text="${clase.nombre}">Nombre</td>
+                                            <td th:text="${clase.descripcion}">Desc</td>
+                                            <td th:text="${clase.capacidad}">Cap</td>
+                                            <td th:text="${clase.entrenador != null ? clase.entrenador.nombre : 'N/A'}">
+                                                Entrenador</td>
+                                            <td>
+                                                <a th:href="@{/admin/clase/editar/{id}(id=${clase.idClase})}"
+                                                    class="btn btn-primary btn-sm">✏️ Editar</a>
+                                                <form th:action="@{/admin/clase/eliminar/{id}(id=${clase.idClase})}"
+                                                    method="post" style="display:inline;"
+                                                    onsubmit="return confirm('¿Estás seguro de eliminar esta clase?');">
+                                                    <button type="submit" class="btn btn-danger btn-sm">🗑️
+                                                        Eliminar</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botón Volver Arriba -->
+                <a href="#" class="btn-top"
+                    onclick="event.preventDefault(); window.scrollTo({top: 0, behavior: 'smooth'});">⬆ Volver
+                    arriba</a>
+
+            </div>
+        </div>
+
+        <!-- JavaScript para acordeones -->
+        <script>
+            function toggleAccordion(element) {
+                const content = element.nextElementSibling;
+                const icon = element.querySelector('.accordion-icon');
+                const allContents = document.querySelectorAll('.accordion-content');
+                const allIcons = document.querySelectorAll('.accordion-icon');
+
+                // Cerrar todos los acordeones
+                allContents.forEach((item) => {
+                    if (item !== content) {
+                        item.classList.remove('active');
+                        item.classList.remove('active-with-scroll');
+                    }
+                });
+
+                // Resetear todos los íconos
+                allIcons.forEach((item) => {
+                    if (item !== icon) {
+                        item.classList.remove('active');
+                    }
+                });
+
+                // Toggle del acordeón actual
+                icon.classList.toggle('active');
+
+                if (content.classList.contains('active') || content.classList.contains('active-with-scroll')) {
+                    // ✅ Cerrar
+                    content.classList.remove('active');
+                    content.classList.remove('active-with-scroll');
+                } else {
+                    // ✅ Abrir
+                    // Calcular altura del contenido
+                    const contentHeight = content.scrollHeight;
+
+                    // Si el contenido es muy grande (más de 1000px), usar scroll
+                    if (contentHeight > 1000) {
+                        content.classList.add('active-with-scroll');
+                        console.log('📊 Acordeón grande detectado. Usando scroll interno.');
+                    } else {
+                        content.classList.add('active');
+                        console.log('📄 Acordeón normal. Mostrando todo el contenido.');
+                    }
+                }
+            }
+
+            // Auto-focus en el campo de búsqueda al cargar
+            window.addEventListener('DOMContentLoaded', function () {
+                const searchInput = document.getElementById('searchDocumento');
+                if (searchInput && searchInput.value === '') {
+                    searchInput.focus();
+                }
+
+                // ✅ Indicador de cantidad de elementos en acordeones
+                console.log('🔍 FitPro Panel cargado');
+                console.log('👥 Clientes:', document.querySelectorAll('#clientes-section tbody tr').length);
+                console.log('🏋️ Rutinas:', document.querySelectorAll('#rutinas-section tbody tr').length);
+                console.log('🍎 Alimentaciones:', document.querySelectorAll('#alimentacion-section tbody tr').length);
+                console.log('👨‍🏫 Entrenadores:', document.querySelectorAll('#entrenadores-section tbody tr').length);
+                console.log('📚 Clases:', document.querySelectorAll('#clases-section tbody tr').length);
+            });
+        </script>
+</body>
+
+</html>
+</body>
+
+</html>
