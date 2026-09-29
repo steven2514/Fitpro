@@ -1,18 +1,22 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Cliente</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap">
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 
 <body class="centered">
     <div class="container">
-        <a href="/admin/panel" class="back-link">← Volver al panel</a>
-        <h2>✏️ Editar Cliente</h2>
-        <form th:action="@{/admin/cliente/editar/{id}(id=${cliente.idCliente})}" method="post" th:object="${cliente}">
+        <a th:href="@{/admin/clientes}" class="back-link">← Volver a clientes</a>
+        <h2>Editar Cliente</h2>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+        <form th:action="@{/admin/cliente/editar/{id}(id=${idCliente})}" method="post" th:object="${cliente}">
             <div class="form-row">
                 <div class="form-group">
                     <label>Nombre *</label>
@@ -39,8 +43,42 @@
                 <label>Dirección</label>
                 <input type="text" th:field="*{direccion}">
             </div>
-            <button type="submit" class="btn btn-primary btn-block">💾 Guardar Cambios</button>
+            <div class="form-group">
+                <label>Nueva contraseña</label>
+                <input type="password" name="password" minlength="8" placeholder="Déjalo vacío para no cambiarla">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Guardar Cambios</button>
         </form>
+
+        <section class="mt-32">
+            <h3 class="subsection-title">Historial de suscripciones</h3>
+            <p th:if="${#lists.isEmpty(historialSuscripciones)}" class="info-note">
+                Este cliente nunca ha tenido un plan. Puedes asignarle uno desde el panel, en "Suscripciones Activas".
+            </p>
+            <div class="table-wrap" th:unless="${#lists.isEmpty(historialSuscripciones)}">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Plan</th>
+                            <th>Desde</th>
+                            <th>Hasta</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="s : ${historialSuscripciones}">
+                            <td th:text="${s.plan.nombre}">Pro</td>
+                            <td th:text="${#temporals.format(s.fechaInicio, 'dd/MM/yyyy')}">-</td>
+                            <td th:text="${#temporals.format(s.fechaFin, 'dd/MM/yyyy')}">-</td>
+                            <td>
+                                <span class="badge" th:classappend="${s.vigente} ? 'badge-success' : 'badge-warning'"
+                                    th:text="${s.estadoTexto}">Activa</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </div>
 </body>
 

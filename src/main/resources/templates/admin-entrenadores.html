@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments :: head('Entrenadores')}"></head>
+
+<body>
+    <nav th:replace="~{fragments :: admin-topbar}"></nav>
+    <div class="admin-layout">
+        <aside th:replace="~{fragments :: admin-sidebar}"></aside>
+
+        <main class="admin-main">
+            <div th:replace="~{fragments :: alertas}"></div>
+
+            <header class="page-head">
+                <div>
+                    <span class="eyebrow">Equipo</span>
+                    <h1>Entrenadores</h1>
+                </div>
+                <span class="badge-count" th:text="${#lists.size(entrenadores)} + ' entrenadores'">0</span>
+            </header>
+
+            <section class="card mb-20">
+                <div class="card-header">
+                    <h2 class="card-title">Nuevo entrenador</h2>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/admin/entrenador/crear}" method="post">
+                        <div class="grid grid-3">
+                            <div class="form-group">
+                                <label for="e-nombre">Nombre *</label>
+                                <input type="text" id="e-nombre" name="nombre" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="e-esp">Especialidad *</label>
+                                <input type="text" id="e-esp" name="especialidad" placeholder="Ej: Musculación" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="e-horario">Disponibilidad</label>
+                                <input type="text" id="e-horario" name="horario" placeholder="Ej: Lun a Vie 8am-2pm">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="e-email">Email</label>
+                                <input type="email" id="e-email" name="email">
+                            </div>
+                            <div class="form-group">
+                                <label for="e-tel">Teléfono</label>
+                                <input type="text" id="e-tel" name="telefono">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Crear entrenador</button>
+                        <p class="info-note">Para que pueda entrar a su panel, dale acceso desde "Editar" después de crearlo.</p>
+                    </form>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-body">
+                    <p th:if="${#lists.isEmpty(entrenadores)}" class="info-note">No hay entrenadores registrados.</p>
+                    <div class="table-wrap" th:unless="${#lists.isEmpty(entrenadores)}">
+                        <table>
+                            <thead>
+                                <tr><th>ID</th><th>Nombre</th><th>Especialidad</th><th>Disponibilidad</th><th>Contacto</th><th>Acceso</th><th>Acciones</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="e : ${entrenadores}">
+                                    <td th:text="${e.idEntrenador}">1</td>
+                                    <td th:text="${e.nombre}">Nombre</td>
+                                    <td th:text="${e.especialidad}">Especialidad</td>
+                                    <td th:text="${e.horario ?: '-'}">Horario</td>
+                                    <td th:text="${e.email != null ? e.email : (e.telefono ?: '-')}">Contacto</td>
+                                    <td>
+                                        <span class="badge" th:classappend="${e.tieneAcceso} ? 'badge-success' : 'badge-warning'"
+                                            th:text="${e.tieneAcceso} ? 'Con acceso' : 'Sin acceso'">Sin acceso</span>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{/admin/entrenador/editar/{id}(id=${e.idEntrenador})}" class="btn btn-primary btn-sm">Editar</a>
+                                        <form th:action="@{/admin/entrenador/eliminar/{id}(id=${e.idEntrenador})}" method="post"
+                                            class="inline-form" data-confirm="¿Eliminar este entrenador?">
+                                            <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+
+</html>

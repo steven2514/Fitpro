@@ -1,28 +1,310 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FitPro - Inicio</title>
+    <title>FitPro - Entrena fuerte. Vive mejor.</title>
+    <meta name="description" content="Tu gimnasio, tu plan y tu entrenador en un solo sistema: IMC, rutinas, alimentación y clases.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap">
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script th:src="@{/js/app.js}" defer></script>
 </head>
 
-<body class="centered">
-    <div class="container home-container">
-        <div class="logo">💪</div>
-        <h1>FitPro</h1>
-        <p class="subtitle">Tu compañero personal de fitness</p>
-        <p class="description">
-            Gestiona tus rutinas, ejercicios y planes alimenticios de forma eficiente.
-            Alcanza tus objetivos con FitPro.
-        </p>
-        <div class="buttons">
-            <a href="/login" class="btn btn-primary">🔒 Iniciar Sesión</a>
-            <a href="/registro" class="btn btn-secondary">✨ Registrarse</a>
-            <a href="/registroAdmin" class="btn btn-tercery">✨ Registrarse como admin</a>
+<body>
+    <header class="site-header site-header-sticky">
+        <a th:href="@{/}" class="brand"><span class="brand-mark">F</span>FitPro</a>
+        <nav class="site-nav" aria-label="Secciones">
+            <a href="#como-funciona">Cómo funciona</a>
+            <a href="#horario" th:unless="${horario.vacio}">Horario</a>
+            <a href="#planes" th:if="${not #lists.isEmpty(planes)}">Planes</a>
+            <a href="#imc">Calcula tu IMC</a>
+            <a href="#preguntas">Preguntas</a>
+        </nav>
+        <nav>
+            <a th:href="@{/login}" class="btn btn-link">Iniciar sesión</a>
+            <a th:href="@{/registro}" class="btn btn-dark">Registrarme</a>
+        </nav>
+    </header>
+
+    <main class="landing">
+        <section class="hero">
+            <div>
+                <span class="pill-tag">Gimnasio · Coaching · Nutrición</span>
+                <h1>Entrena<br><span class="text-accent">fuerte.</span><br>Vive <span class="text-green">mejor.</span></h1>
+                <p class="hero-lead">
+                    Tu gimnasio, tu plan y tu entrenador en un solo sistema. Seguimiento de IMC,
+                    rutinas, alimentación y clases en vivo.
+                </p>
+                <div class="hero-actions">
+                    <a th:href="@{/registro}" class="btn btn-primary btn-lg">Registrarme</a>
+                    <a th:href="@{/login}" class="btn btn-outline btn-lg">Iniciar sesión</a>
+                </div>
+                <div class="hero-stats">
+                    <div><strong th:text="${totalMiembros}">0</strong><span>Miembros</span></div>
+                    <div><strong th:text="${totalClases}">0</strong><span>Clases grupales</span></div>
+                    <div><strong th:text="${totalEntrenadores}">0</strong><span>Entrenadores</span></div>
+                </div>
+            </div>
+
+            <div class="hero-media">
+                <img th:src="@{/images/hero.jpg}" alt="Entrenadora corrigiendo la postura de un alumno en el gimnasio"
+                    width="800" height="1000">
+                <div class="hero-badge" aria-hidden="true">IMC<br>23.4</div>
+            </div>
+        </section>
+
+        <!-- Cómo funciona -->
+        <section class="steps" id="como-funciona">
+            <span class="pill-tag">Cómo funciona</span>
+            <h2>Empieza en tres pasos</h2>
+            <ol class="steps-grid">
+                <li>
+                    <span class="step-num">1</span>
+                    <h3>Crea tu cuenta</h3>
+                    <p>Regístrate gratis con tu documento en menos de un minuto.</p>
+                </li>
+                <li>
+                    <span class="step-num">2</span>
+                    <h3>Elige tu plan</h3>
+                    <p>Básico, Pro o Élite. Sin permanencia: cambia o cancela cuando quieras.</p>
+                </li>
+                <li>
+                    <span class="step-num">3</span>
+                    <h3>Entrena y mide tu avance</h3>
+                    <p>Recibe tu rutina, inscríbete en clases y mira tu progreso semana a semana.</p>
+                </li>
+            </ol>
+        </section>
+
+        <section class="features">
+            <h2>Todo lo que necesitas para avanzar</h2>
+            <div class="grid grid-4">
+                <article class="feature-card">
+                    <div class="feature-icon">
+                        <!-- lucide: dumbbell -->
+                        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M14.4 14.4 9.6 9.6" />
+                            <path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z" />
+                            <path d="m21.5 21.5-1.4-1.4" />
+                            <path d="M3.9 3.9 2.5 2.5" />
+                            <path d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z" />
+                        </svg>
+                    </div>
+                    <h3>Rutinas personalizadas</h3>
+                    <p>Planes por objetivo y nivel, creados por tu entrenador y actualizados cada semana.</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon">
+                        <!-- lucide: salad -->
+                        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M7 21h10" />
+                            <path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9Z" />
+                            <path d="M11.38 12a2.4 2.4 0 0 1-.4-4.77 2.4 2.4 0 0 1 3.2-2.77 2.4 2.4 0 0 1 3.47-.63 2.4 2.4 0 0 1 3.37 3.37 2.4 2.4 0 0 1-1.1 3.7 2.51 2.51 0 0 1 .03 1.1" />
+                            <path d="m13 12 4-4" />
+                            <path d="M10.9 7.25A3.99 3.99 0 0 0 4 10c0 .73.2 1.41.54 2" />
+                        </svg>
+                    </div>
+                    <h3>Planes de alimentación</h3>
+                    <p>Comidas con calorías y descripción, con el total diario siempre a la vista.</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon">
+                        <!-- lucide: users -->
+                        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                    </div>
+                    <h3>Clases con entrenadores</h3>
+                    <p>Inscríbete en clases con cupos disponibles y conoce a quien te acompaña.</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon">
+                        <!-- lucide: activity -->
+                        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                        </svg>
+                    </div>
+                    <h3>Seguimiento de IMC</h3>
+                    <p>Calculamos tu IMC, su categoría y tu peso ideal a partir de tus datos físicos.</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- Horario público de clases (sale de la base de datos) -->
+        <section class="landing-section" id="horario" th:unless="${horario.vacio}">
+            <div class="section-intro">
+                <span class="pill-tag">Horario</span>
+                <h2>Clases grupales de la semana</h2>
+                <p>Con los planes Pro y Élite te inscribes tú mismo desde tu panel, según los cupos disponibles.</p>
+            </div>
+            <div th:replace="~{fragments :: horario(${horario})}"></div>
+        </section>
+
+        <!-- Entrenadores con más clases -->
+        <section class="landing-section" id="equipo" th:unless="${#lists.isEmpty(entrenadores)}">
+            <div class="section-intro">
+                <span class="pill-tag">Equipo</span>
+                <h2>Entrena con los mejores</h2>
+            </div>
+            <div class="grid grid-4">
+                <article class="trainer-card" th:each="par : ${entrenadores}" th:with="e=${par.key}">
+                    <span class="trainer-avatar" th:text="${#strings.substring(e.nombre, 0, 1)}">C</span>
+                    <h3 th:text="${e.nombre}">Entrenador</h3>
+                    <p class="trainer-role" th:text="${e.especialidad ?: 'Entrenador'}">Especialidad</p>
+                    <p class="item-detail" th:text="${par.value} + (${par.value == 1} ? ' clase por semana' : ' clases por semana')">0 clases</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- Calculadora de IMC (app.js; sin JavaScript se muestra la tabla de referencia) -->
+        <section class="landing-section imc-section" id="imc">
+            <div class="imc-grid">
+                <div>
+                    <span class="pill-tag">Herramienta gratis</span>
+                    <h2>Calcula tu IMC ahora</h2>
+                    <p class="section-lead">El índice de masa corporal relaciona tu peso y tu estatura. Es el punto de partida
+                        que usan nuestros entrenadores para ajustar tu rutina.</p>
+                    <ul class="imc-ranges">
+                        <li><span class="dot dot-yellow"></span>Bajo peso: menos de 18,5</li>
+                        <li><span class="dot dot-green"></span>Peso normal: 18,5 a 24,9</li>
+                        <li><span class="dot dot-yellow"></span>Sobrepeso: 25 a 29,9</li>
+                        <li><span class="dot dot-red"></span>Obesidad: 30 o más</li>
+                    </ul>
+                </div>
+                <form class="card imc-card" id="imc-form" novalidate>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="imc-peso">Peso (kg)</label>
+                                <input type="number" id="imc-peso" min="20" max="400" step="0.1" placeholder="70" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="imc-altura">Estatura (cm)</label>
+                                <input type="number" id="imc-altura" min="100" max="250" step="1" placeholder="170" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Calcular</button>
+                        <div class="imc-result" id="imc-result" aria-live="polite" hidden>
+                            <strong id="imc-valor">0</strong>
+                            <span id="imc-categoria">-</span>
+                            <p class="item-detail" id="imc-ideal"></p>
+                            <a th:href="@{/registro}" class="btn btn-dark btn-sm">Guardar mi progreso en FitPro</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section class="pricing" id="planes" th:if="${not #lists.isEmpty(planes)}">
+            <span class="pill-tag">Planes</span>
+            <h2>Elige cómo quieres entrenar</h2>
+            <p class="pricing-lead">Sin permanencia: cambia o cancela tu plan cuando quieras desde tu panel.</p>
+            <div class="pricing-grid">
+                <article class="price-card" th:each="plan : ${planes}" th:classappend="${plan.destacado} ? 'price-card-featured'">
+                    <span class="price-flag" th:if="${plan.destacado}">Más elegido</span>
+                    <h3 th:text="${plan.nombre}">Plan</h3>
+                    <p class="price-desc" th:text="${plan.descripcion}">Descripción</p>
+                    <p class="price-amount">
+                        <strong th:text="${plan.precioFormateado}">$0</strong>
+                        <span th:text="${plan.duracionDias == 30 ? '/ mes' : '/ ' + plan.duracionDias + ' días'}">/ mes</span>
+                    </p>
+                    <ul class="price-features">
+                        <li th:each="beneficio : ${plan.listaBeneficios}" th:text="${beneficio}">Beneficio</li>
+                    </ul>
+                    <a th:href="@{/registro}" class="btn btn-block"
+                        th:classappend="${plan.destacado} ? 'btn-primary' : 'btn-outline'">Empezar</a>
+                </article>
+            </div>
+        </section>
+
+        <!-- Preguntas frecuentes: <details> funciona sin JavaScript -->
+        <section class="landing-section" id="preguntas">
+            <div class="section-intro">
+                <span class="pill-tag">Preguntas frecuentes</span>
+                <h2>Lo que más nos preguntan</h2>
+            </div>
+            <div class="faq">
+                <details>
+                    <summary>¿Tengo que firmar permanencia?</summary>
+                    <p>No. Los planes se pagan por periodo y puedes cambiarlo o cancelarlo cuando quieras desde tu panel.</p>
+                </details>
+                <details>
+                    <summary>¿Cómo me inscribo en una clase grupal?</summary>
+                    <p>Con un plan Pro o Élite activo, entra a tu panel, busca la clase en "Clases disponibles" y pulsa
+                        "Inscribirme". Verás los cupos libres en tiempo real.</p>
+                </details>
+                <details>
+                    <summary>¿Quién diseña mi rutina?</summary>
+                    <p>Un entrenador del equipo, según tu objetivo y nivel. La verás en tu panel con cada ejercicio, sus
+                        series, repeticiones y descanso.</p>
+                </details>
+                <details>
+                    <summary>¿Qué pasa cuando se vence mi plan?</summary>
+                    <p>Te avisamos por correo unos días antes y en tu panel. Puedes renovarlo o elegir otro plan en un clic.</p>
+                </details>
+                <details>
+                    <summary>Olvidé mi contraseña, ¿qué hago?</summary>
+                    <p>En la pantalla de inicio de sesión pulsa "¿La olvidaste?" y te enviaremos un enlace para crear una nueva.</p>
+                </details>
+            </div>
+        </section>
+
+        <!-- Contacto -->
+        <section class="landing-section contact" id="contacto">
+            <div class="contact-grid">
+                <div>
+                    <span class="pill-tag">Visítanos</span>
+                    <h2>Te esperamos en la sede</h2>
+                    <p class="section-lead">Ven a conocer las instalaciones y haz una clase de prueba con un entrenador.</p>
+                </div>
+                <dl class="contact-list">
+                    <div><dt>Horario de atención</dt><dd>Lunes a viernes 5:00 a. m. – 10:00 p. m.<br>Sábados y domingos 7:00 a. m. – 2:00 p. m.</dd></div>
+                    <div><dt>Teléfono</dt><dd>+57 300 123 4567</dd></div>
+                    <div><dt>Email</dt><dd>contacto@fitpro.com</dd></div>
+                </dl>
+            </div>
+        </section>
+
+        <section class="cta">
+            <div>
+                <span class="eyebrow">Empieza hoy</span>
+                <h2>Tu próximo entrenamiento ya está planeado</h2>
+            </div>
+            <div class="cta-actions">
+                <a th:href="@{/registro}" class="btn btn-yellow">Registrarme</a>
+                <a th:href="@{/login}" class="btn btn-primary">Iniciar sesión</a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer-full">
+        <div class="footer-grid">
+            <div>
+                <a th:href="@{/}" class="brand"><span class="brand-mark">F</span>FitPro</a>
+                <p class="item-detail">Gimnasio, coaching y nutrición en un solo lugar.</p>
+            </div>
+            <nav aria-label="Enlaces del sitio">
+                <h4>Explora</h4>
+                <a href="#como-funciona">Cómo funciona</a>
+                <a href="#planes">Planes</a>
+                <a href="#imc">Calculadora de IMC</a>
+                <a href="#preguntas">Preguntas frecuentes</a>
+            </nav>
+            <nav aria-label="Tu cuenta">
+                <h4>Tu cuenta</h4>
+                <a th:href="@{/registro}">Registrarme</a>
+                <a th:href="@{/login}">Iniciar sesión</a>
+                <a th:href="@{/recuperar}">Recuperar contraseña</a>
+            </nav>
         </div>
-    </div>
+        <p class="site-footer">FitPro © 2026 · Diseñado para moverte.</p>
+    </footer>
 </body>
 
 </html>

@@ -1,28 +1,33 @@
 package com.proyecto.fitpro.controller;
 
-import com.proyecto.fitpro.model.Administrador;
-import com.proyecto.fitpro.model.Cliente;
-import com.proyecto.fitpro.repository.AdministradorRepository;
-import com.proyecto.fitpro.repository.ClienteRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import com.proyecto.fitpro.dto.AdministradorDTO;
+import com.proyecto.fitpro.dto.ClienteDTO;
+import com.proyecto.fitpro.exception.NegocioException;
+import com.proyecto.fitpro.service.AdministradorService;
+import com.proyecto.fitpro.service.ClienteService;
+import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class AuthController {
 
-    @Autowired
-    private ClienteRepository clienteRepository;
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
-    @Autowired
-    private AdministradorRepository administradorRepository;
+    private final ClienteService clienteService;
+    private final AdministradorService administradorService;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public AuthController(ClienteService clienteService, AdministradorService administradorService) {
+        this.clienteService = clienteService;
+        this.administradorService = administradorService;
+    }
 
     @GetMapping("/login")
     public String loginForm() {
@@ -31,43 +36,54 @@ public class AuthController {
 
     @GetMapping("/registro")
     public String registroForm(Model model) {
-        model.addAttribute("cliente", new Cliente());
+        model.addAttribute("cliente", new ClienteDTO());
         return "registro";
     }
 
     @PostMapping("/registro")
-    public String registro(@ModelAttribute Cliente cliente, Model model) {
-        try {
-            if (cliente.getPassword() != null && !cliente.getPassword().isBlank()) {
-                cliente.setPassword(passwordEncoder.encode(cliente.getPassword()));
-            }
-            clienteRepository.save(cliente);
-            model.addAttribute("mensaje", "Registro exitoso. Por favor inicia sesión.");
-            return "login";
-        } catch (Exception e) {
-            model.addAttribute("error", "Error al registrar: " + e.getMessage());
+    public String registro(@Valid @ModelAttribute("cliente") ClienteDTO cliente, BindingResult result,
+            Model model, RedirectAttributes redirectAttributes) {
+        if (cliente.getPassword() == null) {
+            result.rejectValue("password", "requerido", "La contraseña es requerida");
+        }
+        if (result.hasErrors()) {
             return "registro";
         }
+        try {
+            clienteService.registrar(cliente);
+            redirectAttributes.addFlashAttribute("mensaje", "Registro exitoso. Por favor inicia sesión.");
+            return "redirect:/login";
+        } catch (NegocioException e) {
+            model.addAttribute("error", e.getMessage());
+        } catch (Exception e) {
+            log.error("Error al registrar cliente", e);
+            model.addAttribute("error", "No se pudo completar el registro. Intenta de nuevo.");
+        }
+        return "registro";
     }
 
     @GetMapping("/registroAdmin")
-    public String registroAdmin(Model model) {
-        model.addAttribute("administrador", new Administrador());
+    public String registroAdminForm(Model model) {
+        model.addAttribute("administrador", new AdministradorDTO());
         return "registroAdmin";
     }
 
     @PostMapping("/registroAdmin")
-    public String registroAdmin(@ModelAttribute Administrador administrador, Model model) {
-        try {
-            if (administrador.getPassword() != null && !administrador.getPassword().isBlank()) {
-                administrador.setPassword(passwordEncoder.encode(administrador.getPassword()));
-            }
-            administradorRepository.save(administrador);
-            model.addAttribute("mensaje", "Registro exitoso. Por favor inicia sesión.");
-            return "login";
-        } catch (Exception e) {
-            model.addAttribute("error", "Error al registrar: " + e.getMessage());
+    public String registroAdmin(@Valid @ModelAttribute("administrador") AdministradorDTO administrador,
+            BindingResult result, Model model, RedirectAttributes redirectAttributes) {
+        if (result.hasErrors()) {
             return "registroAdmin";
         }
+        try {
+            administradorService.registrar(administrador);
+            redirectAttributes.addFlashAttribute("success", "Administrador creado exitosamente");
+            return "redirect:/admin/panel";
+        } catch (NegocioException e) {
+            model.addAttribute("error", e.getMessage());
+        } catch (Exception e) {
+            log.error("Error al registrar administrador", e);
+            model.addAttribute("error", "No se pudo crear el administrador. Intenta de nuevo.");
+        }
+        return "registroAdmin";
     }
 }

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments :: head('Nueva contraseña')}"></head>
+
+<body class="auth-page">
+    <header class="site-header">
+        <a th:href="@{/}" class="brand"><span class="brand-mark">F</span>FitPro</a>
+    </header>
+
+    <main class="auth-main">
+        <div class="auth-card">
+            <span class="eyebrow">Recuperar acceso</span>
+
+            <div th:unless="${valido}">
+                <h1>Enlace no válido</h1>
+                <p class="lead">Este enlace ya se usó o caducó. Los enlaces valen 30 minutos y un solo uso.</p>
+                <a th:href="@{/recuperar}" class="btn btn-primary btn-block">Pedir un enlace nuevo</a>
+            </div>
+
+            <div th:if="${valido}">
+                <h1>Nueva contraseña</h1>
+                <p class="lead">Elige una contraseña de al menos 8 caracteres.</p>
+                <div th:if="${error}" class="alert alert-error" role="alert" th:text="${error}"></div>
+                <form th:action="@{/recuperar/{t}(t=${token})}" method="post">
+                    <div class="form-group">
+                        <label for="nueva">Nueva contraseña</label>
+                        <input type="password" id="nueva" name="nueva" minlength="8" maxlength="72"
+                            autocomplete="new-password" required autofocus>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmacion">Repítela</label>
+                        <input type="password" id="confirmacion" name="confirmacion" minlength="8" maxlength="72"
+                            autocomplete="new-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block btn-lg">Guardar contraseña</button>
+                </form>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

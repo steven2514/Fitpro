@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments :: head('Rutinas')}"></head>
+
+<body>
+    <nav th:replace="~{fragments :: admin-topbar}"></nav>
+    <div class="admin-layout">
+        <aside th:replace="~{fragments :: admin-sidebar}"></aside>
+
+        <main class="admin-main">
+            <div th:replace="~{fragments :: alertas}"></div>
+
+            <header class="page-head">
+                <div>
+                    <span class="eyebrow">Entrenamiento</span>
+                    <h1>Rutinas</h1>
+                </div>
+                <span class="badge-count" th:text="${#lists.size(rutinas)} + ' rutinas'">0 rutinas</span>
+            </header>
+
+            <section class="card mb-20">
+                <div class="card-header">
+                    <h2 class="card-title">Nueva rutina</h2>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/admin/rutina/crear}" method="post">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="r-cliente">Cliente *</label>
+                                <select id="r-cliente" name="idCliente" required>
+                                    <option value="">Seleccione un cliente</option>
+                                    <option th:each="c : ${clientes}" th:value="${c.idCliente}"
+                                        th:text="${c.nombre + ' ' + c.apellido}"></option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="r-nivel">Nivel *</label>
+                                <select id="r-nivel" name="nivel" required>
+                                    <option value="Básico">Básico</option>
+                                    <option value="Intermedio">Intermedio</option>
+                                    <option value="Avanzado">Avanzado</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="r-nombre">Nombre *</label>
+                                <input type="text" id="r-nombre" name="nombre" placeholder="Ej: Fuerza tren superior" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="r-objetivo">Objetivo *</label>
+                                <input type="text" id="r-objetivo" name="objetivo" placeholder="Ej: Ganar masa muscular" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Crear y agregar ejercicios</button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-body">
+                    <p th:if="${#lists.isEmpty(rutinas)}" class="info-note">No hay rutinas creadas.</p>
+                    <div class="table-wrap" th:unless="${#lists.isEmpty(rutinas)}">
+                        <table>
+                            <thead>
+                                <tr><th>ID</th><th>Cliente</th><th>Nombre</th><th>Objetivo</th><th>Nivel</th><th>Creada por</th><th>Ejercicios</th><th>Acciones</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="rutina : ${rutinas}">
+                                    <td th:text="${rutina.idRutina}">1</td>
+                                    <td th:text="${rutina.cliente != null ? rutina.cliente.nombre + ' ' + rutina.cliente.apellido : 'N/A'}">Cliente</td>
+                                    <td th:text="${rutina.nombre}">Nombre</td>
+                                    <td th:text="${rutina.objetivo}">Objetivo</td>
+                                    <td><span class="badge badge-primary" th:text="${rutina.nivel}">Nivel</span></td>
+                                    <td th:text="${rutina.entrenador != null ? rutina.entrenador.nombre : 'Administración'}">-</td>
+                                    <td>
+                                        <span class="badge" th:classappend="${#lists.isEmpty(rutina.ejercicios)} ? 'badge-warning' : 'badge-success'"
+                                            th:text="${#lists.size(rutina.ejercicios)}">0</span>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{/admin/rutina/editar/{id}(id=${rutina.idRutina})}" class="btn btn-primary btn-sm">Editar y ejercicios</a>
+                                        <form th:action="@{/admin/rutina/eliminar/{id}(id=${rutina.idRutina})}" method="post"
+                                            class="inline-form" data-confirm="¿Eliminar esta rutina y sus ejercicios?">
+                                            <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+
+</html>

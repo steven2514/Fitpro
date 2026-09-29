@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head th:fragment="head(titulo)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'FitPro - ' + ${titulo}">FitPro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script th:src="@{/js/app.js}" defer></script>
+</head>
+
+<body>
+
+    <!-- Mensajes flash de éxito / error -->
+    <div th:fragment="alertas" th:remove="tag">
+        <div th:if="${success}" class="alert alert-success" role="status" th:text="${success}"></div>
+        <div th:if="${error}" class="alert alert-error" role="alert" th:text="${error}"></div>
+    </div>
+
+    <!-- Barra superior del panel de administración -->
+    <nav th:fragment="admin-topbar" class="navbar">
+        <div class="navbar-brand">
+            <a th:href="@{/}" class="brand"><span class="brand-mark">F</span>FitPro</a>
+            <span class="navbar-role">Admin</span>
+        </div>
+        <div class="navbar-user">
+            <span class="user-name" th:text="${admin != null ? (admin.nombre ?: '') + ' ' + admin.apellido : 'Admin'}">Admin</span>
+            <a th:href="@{/registroAdmin}" class="btn btn-secondary btn-sm">Nuevo admin</a>
+            <form th:action="@{/logout}" method="post" class="inline-form"><button type="submit" class="btn btn-danger btn-sm">Salir</button></form>
+        </div>
+    </nav>
+
+    <!-- Barra superior del cliente; "activa" es 'panel' o 'perfil' -->
+    <nav th:fragment="cliente-topbar(activa)" class="navbar">
+        <div class="navbar-brand">
+            <a th:href="@{/}" class="brand"><span class="brand-mark">F</span>FitPro</a>
+            <span class="navbar-role">Mi panel</span>
+        </div>
+        <div class="navbar-links">
+            <a th:href="@{/cliente/panel}" th:classappend="${activa == 'panel'} ? 'activo'">Inicio</a>
+            <a th:href="@{/cliente/panel#plan}">Mi plan</a>
+            <a th:href="@{/cliente/panel#clases}">Clases</a>
+            <a th:href="@{/cliente/panel#progreso}">Progreso</a>
+            <a th:href="@{/cliente/perfil}" th:classappend="${activa == 'perfil'} ? 'activo'">Mi perfil</a>
+        </div>
+        <div class="navbar-user">
+            <span class="user-name" th:text="${cliente != null ? cliente.nombre + ' ' + cliente.apellido : 'Cliente'}">Cliente</span>
+            <form th:action="@{/logout}" method="post" class="inline-form"><button type="submit" class="btn btn-danger btn-sm">Salir</button></form>
+        </div>
+    </nav>
+
+    <!-- Menú lateral del panel de administración; ${seccion} marca la página activa -->
+    <aside th:fragment="admin-sidebar" class="admin-sidebar" aria-label="Secciones del panel">
+        <a th:href="@{/admin/panel}" th:classappend="${seccion == 'resumen'} ? 'activo'">Resumen</a>
+        <a th:href="@{/admin/clientes}" th:classappend="${seccion == 'clientes'} ? 'activo'">Clientes</a>
+        <a th:href="@{/admin/suscripciones}" th:classappend="${seccion == 'suscripciones'} ? 'activo'">Planes y suscripciones</a>
+        <a th:href="@{/admin/clases}" th:classappend="${seccion == 'clases'} ? 'activo'">Clases y horario</a>
+        <a th:href="@{/admin/entrenadores}" th:classappend="${seccion == 'entrenadores'} ? 'activo'">Entrenadores</a>
+        <a th:href="@{/admin/rutinas}" th:classappend="${seccion == 'rutinas'} ? 'activo'">Rutinas</a>
+        <a th:href="@{/admin/alimentacion}" th:classappend="${seccion == 'alimentacion'} ? 'activo'">Alimentación</a>
+        <a th:href="@{/admin/reportes}" th:classappend="${seccion == 'reportes'} ? 'activo'">Reportes</a>
+    </aside>
+
+    <!-- Horario semanal (lunes a domingo). Recibe un HorarioSemanal -->
+    <div th:fragment="horario(h)" class="week">
+        <div class="week-day" th:each="dia : ${h.dias}" th:classappend="${dia.hoy} ? 'week-today'">
+            <div class="week-head">
+                <span class="week-name" th:text="${dia.nombre}">Lunes</span>
+                <span class="week-short" th:text="${dia.abreviado}">lun</span>
+                <span class="badge badge-warning" th:if="${dia.hoy}">Hoy</span>
+            </div>
+            <p class="week-empty" th:if="${#lists.isEmpty(dia.clases)}">Sin clases</p>
+            <div class="week-class" th:each="c : ${dia.clases}">
+                <span class="week-time" th:text="${c.horaTexto}">18:00</span>
+                <strong th:text="${c.nombre}">Clase</strong>
+                <span class="week-meta" th:if="${c.entrenador != null}" th:text="${c.entrenador.nombre}">Entrenador</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campos del formulario de plan de suscripción, compartidos por "crear" y "editar".
+         Se usa dentro de un <form th:object="${...}"> con un PlanDTO. -->
+    <div th:fragment="campos-plan" th:remove="tag">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="plan-nombre">Nombre *</label>
+                <input type="text" id="plan-nombre" th:field="*{nombre}" placeholder="Ej: Pro" required>
+            </div>
+            <div class="form-group">
+                <label for="plan-precio">Precio mensual (COP) *</label>
+                <input type="number" id="plan-precio" th:field="*{precioMensual}" min="0" step="100" placeholder="109900" required>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="plan-duracion">Duración (días) *</label>
+                <input type="number" id="plan-duracion" th:field="*{duracionDias}" min="1" max="366" placeholder="30" required>
+            </div>
+            <div class="form-group">
+                <label for="plan-descripcion">Descripción corta</label>
+                <input type="text" id="plan-descripcion" th:field="*{descripcion}" placeholder="Ej: Entrena y únete a las clases">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="plan-beneficios">Beneficios (uno por línea)</label>
+            <textarea id="plan-beneficios" th:field="*{beneficios}" rows="4"
+                placeholder="Clases grupales ilimitadas&#10;Plan de alimentación"></textarea>
+        </div>
+        <div class="check-row">
+            <label class="check"><input type="checkbox" th:field="*{incluyeClases}"> Incluye clases grupales</label>
+            <label class="check"><input type="checkbox" th:field="*{destacado}"> Destacar como "Más elegido"</label>
+        </div>
+    </div>
+
+    <!-- Campos de horario de una clase (día, hora y duración). Recibe la clase o null -->
+    <div th:fragment="campos-horario(clase)" th:remove="tag">
+        <div class="grid grid-horario">
+            <div class="form-group">
+                <label for="diaSemana">Día</label>
+                <select id="diaSemana" name="diaSemana">
+                    <option value="">Sin programar</option>
+                    <option th:each="d : ${dias}" th:value="${d.key}"
+                        th:selected="${clase != null and clase.diaSemana == d.key}"
+                        th:text="${d.value}">Lunes</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="hora">Hora de inicio</label>
+                <input type="time" id="hora" name="hora"
+                    th:value="${clase != null and clase.hora != null} ? ${#temporals.format(clase.hora, 'HH:mm')} : ''">
+            </div>
+            <div class="form-group">
+                <label for="duracionMinutos">Duración (min)</label>
+                <input type="number" id="duracionMinutos" name="duracionMinutos" min="10" max="300" step="5"
+                    th:value="${clase != null} ? ${clase.duracionMinutos} : 60">
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

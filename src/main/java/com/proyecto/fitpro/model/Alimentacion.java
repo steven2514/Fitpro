@@ -3,10 +3,12 @@ package com.proyecto.fitpro.model;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "Alimentacion")
+@Table(name = "alimentacion")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,6 +19,8 @@ public class Alimentacion {
     @Column(name = "idAlimentacion")
     private Integer idAlimentacion;
 
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idCliente")
     private Cliente cliente;

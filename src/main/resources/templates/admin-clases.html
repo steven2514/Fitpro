@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments :: head('Clases y horario')}"></head>
+
+<body>
+    <nav th:replace="~{fragments :: admin-topbar}"></nav>
+    <div class="admin-layout">
+        <aside th:replace="~{fragments :: admin-sidebar}"></aside>
+
+        <main class="admin-main">
+            <div th:replace="~{fragments :: alertas}"></div>
+
+            <header class="page-head">
+                <div>
+                    <span class="eyebrow">Programación</span>
+                    <h1>Clases y horario</h1>
+                </div>
+                <span class="badge-count" th:text="${#lists.size(clases)} + ' clases'">0</span>
+            </header>
+
+            <section class="card mb-20">
+                <div class="card-header">
+                    <h2 class="card-title">Horario semanal</h2>
+                </div>
+                <div class="card-body">
+                    <p th:if="${horario.vacio}" class="info-note">Aún no hay clases con día y hora. Prográmalas al crearlas o editarlas.</p>
+                    <th:block th:unless="${horario.vacio}">
+                        <div th:replace="~{fragments :: horario(${horario})}"></div>
+                    </th:block>
+                    <p th:unless="${#lists.isEmpty(horario.sinProgramar)}" class="info-note mt-20"
+                        th:text="${#lists.size(horario.sinProgramar)} + ' clase(s) sin día u hora: no aparecen en el horario.'">-</p>
+                </div>
+            </section>
+
+            <div class="grid grid-2 mb-20">
+                <section class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Nueva clase</h2>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/clase/crear}" method="post">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="cl-nombre">Nombre *</label>
+                                    <input type="text" id="cl-nombre" name="nombre" placeholder="Ej: Spinning" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cl-cap">Capacidad *</label>
+                                    <input type="number" id="cl-cap" name="capacidad" min="1" placeholder="15" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="cl-desc">Descripción *</label>
+                                <textarea id="cl-desc" name="descripcion" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="cl-ent">Entrenador *</label>
+                                <select id="cl-ent" name="idEntrenador" required>
+                                    <option value="">Seleccione un entrenador</option>
+                                    <option th:each="e : ${entrenadores}" th:value="${e.idEntrenador}" th:text="${e.nombre}"></option>
+                                </select>
+                            </div>
+                            <div th:replace="~{fragments :: campos-horario(null)}"></div>
+                            <button type="submit" class="btn btn-primary">Crear clase</button>
+                        </form>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Inscribir cliente en una clase</h2>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/clase/inscribir}" method="post">
+                            <div class="form-group">
+                                <label for="i-cliente">Cliente *</label>
+                                <select id="i-cliente" name="idCliente" required>
+                                    <option value="">Seleccione un cliente</option>
+                                    <option th:each="c : ${clientes}" th:value="${c.idCliente}"
+                                        th:text="${c.nombre + ' ' + c.apellido + ' (' + c.documento + ')'}"></option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="i-clase">Clase *</label>
+                                <select id="i-clase" name="idClase" required>
+                                    <option value="">Seleccione una clase</option>
+                                    <option th:each="c : ${clases}" th:value="${c.idClase}" th:disabled="${c.llena}"
+                                        th:text="${c.nombre + ' · ' + c.horarioTexto + (c.llena ? ' (llena)' : '')}"></option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Inscribir</button>
+                            <p class="info-note">Desde aquí no se exige plan: úsalo para inscripciones en recepción.</p>
+                        </form>
+                    </div>
+                </section>
+            </div>
+
+            <section class="card">
+                <div class="card-body">
+                    <p th:if="${#lists.isEmpty(clases)}" class="info-note">No hay clases creadas.</p>
+                    <div class="table-wrap" th:unless="${#lists.isEmpty(clases)}">
+                        <table>
+                            <thead>
+                                <tr><th>Clase</th><th>Horario</th><th>Entrenador</th><th>Ocupación</th><th>Acciones</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="c : ${clases}">
+                                    <td>
+                                        <strong th:text="${c.nombre}">Clase</strong>
+                                        <span class="item-detail" th:text="${c.descripcion}">Descripción</span>
+                                    </td>
+                                    <td th:text="${c.horarioTexto}">Lunes 18:00</td>
+                                    <td th:text="${c.entrenador != null ? c.entrenador.nombre : 'N/A'}">Entrenador</td>
+                                    <td class="cell-ocupacion">
+                                        <div class="meter" th:attr="aria-label=${c.ocupacion} + '% ocupada'">
+                                            <span th:class="'meter-fill w-' + ${c.ocupacion / 5 * 5}"
+                                                th:classappend="${c.llena} ? 'meter-full'"></span>
+                                        </div>
+                                        <span class="item-detail" th:text="${c.inscritos} + (${c.capacidad != null} ? ' / ' + ${c.capacidad} : '')">0 / 0</span>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{/admin/clase/editar/{id}(id=${c.idClase})}" class="btn btn-primary btn-sm">Editar</a>
+                                        <form th:action="@{/admin/clase/eliminar/{id}(id=${c.idClase})}" method="post"
+                                            class="inline-form" data-confirm="¿Eliminar esta clase? Se quitarán sus inscripciones.">
+                                            <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+
+</html>

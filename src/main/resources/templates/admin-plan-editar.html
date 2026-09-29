@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitPro - Editar Plan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body class="centered">
+    <div class="container">
+        <a th:href="@{/admin/suscripciones}" class="back-link">← Volver a planes</a>
+        <h2>Editar plan</h2>
+
+        <div th:if="${error}" class="alert alert-error" role="alert" th:text="${error}"></div>
+
+        <form th:action="@{/admin/plan/editar/{id}(id=${idPlan})}" method="post" th:object="${plan}">
+            <div th:replace="~{fragments :: campos-plan}"></div>
+            <button type="submit" class="btn btn-primary btn-block">Guardar cambios</button>
+        </form>
+    </div>
+</body>
+
+</html>

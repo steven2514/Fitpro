@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments :: head('Mi perfil')}"></head>
+
+<body>
+    <nav th:replace="~{fragments :: cliente-topbar('perfil')}"></nav>
+
+    <div class="panel-content">
+        <div class="container-large container-narrow">
+            <div th:replace="~{fragments :: alertas}"></div>
+
+            <header class="page-head">
+                <div>
+                    <span class="eyebrow">Tu cuenta</span>
+                    <h1>Mi perfil</h1>
+                </div>
+            </header>
+
+            <div class="grid grid-2">
+                <!-- Datos fijos: sólo los cambia la administración -->
+                <section class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Datos personales</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="client-info-grid">
+                            <div class="client-info-item"><strong>Nombre</strong><span th:text="${cliente.nombre + ' ' + cliente.apellido}">-</span></div>
+                            <div class="client-info-item"><strong>Documento</strong><span th:text="${cliente.documento}">-</span></div>
+                            <div class="client-info-item"><strong>Miembro desde</strong>
+                                <span th:text="${cliente.fechaRegistro != null ? #temporals.format(cliente.fechaRegistro, 'dd/MM/yyyy') : '-'}">-</span></div>
+                        </div>
+                        <p class="info-note">Para corregir tu nombre o documento, habla con recepción.</p>
+                    </div>
+                </section>
+
+                <!-- Contacto editable -->
+                <section class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Contacto</h2>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/cliente/perfil}" method="post" th:object="${perfil}">
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" th:field="*{email}" placeholder="tucorreo@ejemplo.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="telefono">Teléfono</label>
+                                <input type="text" id="telefono" th:field="*{telefono}">
+                            </div>
+                            <div class="form-group">
+                                <label for="direccion">Dirección</label>
+                                <input type="text" id="direccion" th:field="*{direccion}">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Guardar contacto</button>
+                        </form>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Contraseña -->
+            <section class="card mt-20" id="seguridad">
+                <div class="card-header">
+                    <h2 class="card-title">Cambiar contraseña</h2>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/cliente/perfil/password}" method="post">
+                        <div class="grid grid-3">
+                            <div class="form-group">
+                                <label for="actual">Contraseña actual</label>
+                                <input type="password" id="actual" name="actual" autocomplete="current-password" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="nueva">Nueva contraseña</label>
+                                <input type="password" id="nueva" name="nueva" minlength="8" maxlength="72"
+                                    autocomplete="new-password" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmacion">Repite la nueva</label>
+                                <input type="password" id="confirmacion" name="confirmacion" minlength="8" maxlength="72"
+                                    autocomplete="new-password" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-dark">Cambiar contraseña</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Historial de planes -->
+            <section class="card mt-20">
+                <div class="card-header">
+                    <h2 class="card-title">Historial de planes</h2>
+                </div>
+                <div class="card-body">
+                    <p th:if="${#lists.isEmpty(historialSuscripciones)}" class="info-note">
+                        Todavía no has tenido ningún plan. <a th:href="@{/cliente/panel#plan}">Elige uno</a>.
+                    </p>
+                    <div class="table-wrap" th:unless="${#lists.isEmpty(historialSuscripciones)}">
+                        <table>
+                            <thead>
+                                <tr><th>Plan</th><th>Desde</th><th>Hasta</th><th>Precio</th><th>Estado</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="s : ${historialSuscripciones}">
+                                    <td th:text="${s.plan.nombre}">Pro</td>
+                                    <td th:text="${#temporals.format(s.fechaInicio, 'dd/MM/yyyy')}">-</td>
+                                    <td th:text="${#temporals.format(s.fechaFin, 'dd/MM/yyyy')}">-</td>
+                                    <td th:text="'$' + ${#numbers.formatInteger(s.precioPagado, 1, 'POINT')}">$0</td>
+                                    <td>
+                                        <span class="badge" th:classappend="${s.vigente} ? 'badge-success' : 'badge-warning'"
+                                            th:text="${s.estadoTexto}">Activa</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+
+</html>

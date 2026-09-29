@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments :: head('Recuperar contraseña')}"></head>
+
+<body class="auth-page">
+    <header class="site-header">
+        <a th:href="@{/}" class="brand"><span class="brand-mark">F</span>FitPro</a>
+        <nav>
+            <a th:href="@{/login}" class="btn btn-dark">Iniciar sesión</a>
+        </nav>
+    </header>
+
+    <main class="auth-main">
+        <div class="auth-card">
+            <span class="eyebrow">¿Olvidaste tu contraseña?</span>
+            <h1>Recupera tu acceso</h1>
+
+            <div th:if="${enviado}">
+                <div class="alert alert-success" role="status">
+                    Si el email está registrado, te enviamos un enlace para restablecer tu contraseña.
+                    Revisa tu bandeja de entrada (y la carpeta de spam).
+                </div>
+                <p class="lead">El enlace vale 30 minutos y sólo se puede usar una vez.</p>
+                <a th:href="@{/login}" class="btn btn-primary btn-block">Volver a iniciar sesión</a>
+            </div>
+
+            <div th:unless="${enviado}">
+                <p class="lead">Escribe el email de tu cuenta y te enviaremos un enlace para crear una nueva contraseña.</p>
+                <form th:action="@{/recuperar}" method="post">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" placeholder="tucorreo@ejemplo.com"
+                            autocomplete="email" required autofocus>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block btn-lg">Enviar enlace</button>
+                </form>
+                <p class="auth-footer">¿La recordaste? <a th:href="@{/login}">Inicia sesión</a></p>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

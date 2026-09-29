@@ -3,11 +3,13 @@ package com.proyecto.fitpro.model;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Entity
-@Table(name = "Entrenador")
+@Table(name = "entrenador")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -33,6 +35,17 @@ public class Entrenador {
     @Column(name = "telefono", length = 20)
     private String telefono;
 
+    /** Hash BCrypt. Si es null, el entrenador no tiene acceso a la aplicación. */
+    @ToString.Exclude
+    @Column(name = "password", length = 255)
+    private String password;
+
+    public boolean isTieneAcceso() {
+        return password != null;
+    }
+
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "entrenador", fetch = FetchType.LAZY)
     private List<Clase> clases;
 }

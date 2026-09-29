@@ -3,10 +3,12 @@ package com.proyecto.fitpro.model;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "Ejercicio")
+@Table(name = "ejercicio")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -32,6 +34,8 @@ public class Ejercicio {
     @Column(name = "notas", columnDefinition = "TEXT")
     private String notas;
 
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "Rutina_idRutina")
     private Rutina rutina;

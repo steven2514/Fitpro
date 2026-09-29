@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments :: head('Planes y suscripciones')}"></head>
+
+<body>
+    <nav th:replace="~{fragments :: admin-topbar}"></nav>
+    <div class="admin-layout">
+        <aside th:replace="~{fragments :: admin-sidebar}"></aside>
+
+        <main class="admin-main">
+            <div th:replace="~{fragments :: alertas}"></div>
+
+            <header class="page-head">
+                <div>
+                    <span class="eyebrow">Ventas</span>
+                    <h1>Planes y suscripciones</h1>
+                </div>
+                <div class="page-head-stats">
+                    <span class="badge-count" th:text="${#lists.size(suscripciones)} + ' activas'">0 activas</span>
+                    <span class="badge badge-success" th:text="${ingresosMensuales} + ' / mes'">$0</span>
+                </div>
+            </header>
+
+            <!-- Planes -->
+            <section class="card mb-20" id="planes">
+                <div class="card-header">
+                    <h2 class="card-title">Planes</h2>
+                </div>
+                <div class="card-body">
+                    <p th:if="${#lists.isEmpty(planes)}" class="info-note">No hay planes creados.</p>
+                    <div class="table-wrap" th:unless="${#lists.isEmpty(planes)}">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Plan</th><th>Precio</th><th>Duración</th><th>Clases</th>
+                                    <th>Suscriptores</th><th>Estado</th><th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="plan : ${planes}">
+                                    <td>
+                                        <strong th:text="${plan.nombre}">Plan</strong>
+                                        <span class="badge badge-warning" th:if="${plan.destacado}">Destacado</span>
+                                    </td>
+                                    <td th:text="${plan.precioFormateado}">$0</td>
+                                    <td th:text="${plan.duracionDias} + ' días'">30 días</td>
+                                    <td th:text="${plan.incluyeClases} ? 'Sí' : 'No'">Sí</td>
+                                    <td th:text="${suscriptoresPorPlan[plan.idPlan]}">0</td>
+                                    <td>
+                                        <span class="badge" th:classappend="${plan.activo} ? 'badge-success' : 'badge-warning'"
+                                            th:text="${plan.activo} ? 'Activo' : 'Inactivo'">Activo</span>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{/admin/plan/editar/{id}(id=${plan.idPlan})}" class="btn btn-primary btn-sm">Editar</a>
+                                        <form th:action="@{/admin/plan/estado/{id}(id=${plan.idPlan})}" method="post" class="inline-form">
+                                            <button type="submit" class="btn btn-secondary btn-sm"
+                                                th:text="${plan.activo} ? 'Desactivar' : 'Activar'">Desactivar</button>
+                                        </form>
+                                        <form th:action="@{/admin/plan/eliminar/{id}(id=${plan.idPlan})}" method="post"
+                                            class="inline-form" data-confirm="¿Eliminar este plan?">
+                                            <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <div class="grid grid-2 mb-20">
+                <section class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Asignar plan a un cliente</h2>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/suscripcion/asignar}" method="post">
+                            <div class="form-group">
+                                <label for="asig-cliente">Cliente</label>
+                                <select id="asig-cliente" name="idCliente" required>
+                                    <option value="">Seleccione un cliente</option>
+                                    <option th:each="c : ${clientes}" th:value="${c.idCliente}"
+                                        th:text="${c.nombre + ' ' + c.apellido + ' (' + c.documento + ')'}"></option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="asig-plan">Plan</label>
+                                <select id="asig-plan" name="idPlan" required>
+                                    <option value="">Seleccione un plan</option>
+                                    <option th:each="p : ${planesActivos}" th:value="${p.idPlan}"
+                                        th:text="${p.nombre + ' — ' + p.precioFormateado}"></option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Asignar</button>
+                            <p class="info-note">Si el cliente ya tiene un plan activo, se reemplaza por el nuevo.</p>
+                        </form>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Crear plan</h2>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/plan/crear}" method="post" th:object="${nuevoPlan}">
+                            <div th:replace="~{fragments :: campos-plan}"></div>
+                            <button type="submit" class="btn btn-primary">Crear plan</button>
+                        </form>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Suscripciones activas -->
+            <section class="card" id="activas">
+                <div class="card-header">
+                    <h2 class="card-title">Suscripciones activas</h2>
+                    <form th:action="@{/admin/suscripcion/avisar}" method="post" class="inline-form">
+                        <button type="submit" class="btn btn-secondary btn-sm">Avisar a los que vencen pronto</button>
+                    </form>
+                </div>
+                <div class="card-body">
+                    <p th:if="${#lists.isEmpty(suscripciones)}" class="info-note">No hay suscripciones activas.</p>
+                    <div class="table-wrap" th:unless="${#lists.isEmpty(suscripciones)}">
+                        <table>
+                            <thead>
+                                <tr><th>Cliente</th><th>Plan</th><th>Precio</th><th>Inicio</th><th>Vence</th><th>Días</th><th>Acciones</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="s : ${suscripciones}">
+                                    <td th:text="${s.cliente.nombre + ' ' + s.cliente.apellido}">Cliente</td>
+                                    <td><span class="badge badge-primary" th:text="${s.plan.nombre}">Plan</span></td>
+                                    <td th:text="'$' + ${#numbers.formatInteger(s.precioPagado, 1, 'POINT')}">$0</td>
+                                    <td th:text="${#temporals.format(s.fechaInicio, 'dd/MM/yyyy')}">-</td>
+                                    <td th:text="${#temporals.format(s.fechaFin, 'dd/MM/yyyy')}">-</td>
+                                    <td>
+                                        <span class="badge" th:classappend="${s.porVencer} ? 'badge-warning' : 'badge-success'"
+                                            th:text="${s.diasRestantes}">0</span>
+                                    </td>
+                                    <td>
+                                        <form th:action="@{/admin/suscripcion/cancelar/{id}(id=${s.idSuscripcion})}" method="post"
+                                            class="inline-form" data-confirm="¿Cancelar esta suscripción?">
+                                            <button type="submit" class="btn btn-danger btn-sm">Cancelar</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+
+</html>

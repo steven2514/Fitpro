@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface RutinaRepository extends JpaRepository<Rutina, Integer> {
     List<Rutina> findByCliente_IdCliente(Integer idCliente);
+    List<Rutina> findByEntrenador_IdEntrenadorOrderByIdRutinaDesc(Integer idEntrenador);
 }

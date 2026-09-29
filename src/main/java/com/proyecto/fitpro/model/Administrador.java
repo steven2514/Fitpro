@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "Administrador")
+@Table(name = "administrador")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,6 +16,9 @@ public class Administrador {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idAdministrador")
     private Integer idAdministrador;
+
+    @Column(name = "nombre", length = 50)
+    private String nombre;
 
     @Column(name = "apellido", length = 50)
     private String apellido;
@@ -28,8 +31,4 @@ public class Administrador {
 
     @Column(name = "password", length = 255)
     private String password;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "Cliente_idCliente")
-    private Cliente cliente;
 }

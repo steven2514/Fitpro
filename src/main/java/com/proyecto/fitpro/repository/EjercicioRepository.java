@@ -7,5 +7,5 @@ import java.util.List;
 
 @Repository
 public interface EjercicioRepository extends JpaRepository<Ejercicio, Integer> {
-    List<Ejercicio> findByRutina_IdRutina(Integer idRutina);
+    List<Ejercicio> findByRutina_IdRutinaOrderByIdEjercicioAsc(Integer idRutina);
 }

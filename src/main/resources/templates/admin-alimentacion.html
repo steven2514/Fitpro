@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments :: head('Alimentación')}"></head>
+
+<body>
+    <nav th:replace="~{fragments :: admin-topbar}"></nav>
+    <div class="admin-layout">
+        <aside th:replace="~{fragments :: admin-sidebar}"></aside>
+
+        <main class="admin-main">
+            <div th:replace="~{fragments :: alertas}"></div>
+
+            <header class="page-head">
+                <div>
+                    <span class="eyebrow">Nutrición</span>
+                    <h1>Planes alimenticios</h1>
+                </div>
+                <span class="badge-count" th:text="${#lists.size(alimentaciones)} + ' comidas'">0</span>
+            </header>
+
+            <section class="card mb-20">
+                <div class="card-header">
+                    <h2 class="card-title">Nueva comida</h2>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/admin/alimentacion/crear}" method="post">
+                        <div class="grid grid-3">
+                            <div class="form-group">
+                                <label for="a-cliente">Cliente *</label>
+                                <select id="a-cliente" name="idCliente" required>
+                                    <option value="">Seleccione un cliente</option>
+                                    <option th:each="c : ${clientes}" th:value="${c.idCliente}"
+                                        th:text="${c.nombre + ' ' + c.apellido}"></option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="a-tipo">Tipo de comida *</label>
+                                <select id="a-tipo" name="tipoComida" required>
+                                    <option value="Desayuno">Desayuno</option>
+                                    <option value="Media Mañana">Media mañana</option>
+                                    <option value="Almuerzo">Almuerzo</option>
+                                    <option value="Merienda">Merienda</option>
+                                    <option value="Cena">Cena</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="a-calorias">Calorías *</label>
+                                <input type="number" id="a-calorias" name="calorias" min="1" placeholder="Ej: 350" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="a-desc">Descripción *</label>
+                            <textarea id="a-desc" name="descripcion" placeholder="Ej: Avena con frutas y huevo cocido" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Agregar al plan</button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-body">
+                    <p th:if="${#lists.isEmpty(alimentaciones)}" class="info-note">No hay planes alimenticios creados.</p>
+                    <div class="table-wrap" th:unless="${#lists.isEmpty(alimentaciones)}">
+                        <table>
+                            <thead>
+                                <tr><th>ID</th><th>Cliente</th><th>Comida</th><th>Calorías</th><th>Descripción</th><th>Acciones</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="a : ${alimentaciones}">
+                                    <td th:text="${a.idAlimentacion}">1</td>
+                                    <td th:text="${a.cliente != null ? a.cliente.nombre + ' ' + a.cliente.apellido : 'N/A'}">Cliente</td>
+                                    <td th:text="${a.tipoComida}">Tipo</td>
+                                    <td th:text="${a.calorias + ' kcal'}">Cal</td>
+                                    <td th:text="${a.descripcion}">Desc</td>
+                                    <td>
+                                        <a th:href="@{/admin/alimentacion/editar/{id}(id=${a.idAlimentacion})}" class="btn btn-primary btn-sm">Editar</a>
+                                        <form th:action="@{/admin/alimentacion/eliminar/{id}(id=${a.idAlimentacion})}" method="post"
+                                            class="inline-form" data-confirm="¿Eliminar esta comida del plan?">
+                                            <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+
+</html>

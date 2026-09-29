@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments :: head('Reportes')}"></head>
+
+<body>
+    <nav th:replace="~{fragments :: admin-topbar}"></nav>
+    <div class="admin-layout">
+        <aside th:replace="~{fragments :: admin-sidebar}"></aside>
+
+        <main class="admin-main">
+            <div th:replace="~{fragments :: alertas}"></div>
+
+            <header class="page-head">
+                <div>
+                    <span class="eyebrow">Análisis</span>
+                    <h1>Reportes</h1>
+                </div>
+            </header>
+
+            <div class="grid grid-4 mb-20">
+                <div class="stats-card stat-green">
+                    <p>Ventas este mes</p>
+                    <h3 class="stat-text" th:text="${ingresosDelMes}">$0</h3>
+                </div>
+                <div class="stats-card stat-dark">
+                    <p>Ingreso recurrente mensual</p>
+                    <h3 class="stat-text" th:text="${ingresosRecurrentes}">$0</h3>
+                </div>
+                <div class="stats-card stat-accent">
+                    <p>Clientes nuevos este mes</p>
+                    <h3 th:text="${clientesNuevosDelMes}">0</h3>
+                </div>
+                <div class="stats-card stat-yellow">
+                    <p>Ocupación media de clases</p>
+                    <h3 th:text="${ocupacionPromedio} + '%'">0%</h3>
+                </div>
+            </div>
+
+            <div class="grid grid-2">
+                <!-- Barras verticales: una columna por mes -->
+                <section class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Ventas de planes por mes</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="columns" role="img" aria-label="Ventas de planes de los últimos 6 meses">
+                            <div class="column" th:each="b : ${ingresosPorMes}">
+                                <span class="column-value" th:text="${b.valor == 0} ? '-' : ${b.texto}">$0</span>
+                                <div class="column-track"><span class="column-fill h-0" th:class="'column-fill h-' + ${b.porcentaje / 5 * 5}"></span></div>
+                                <span class="column-label" th:text="${b.etiqueta}">Ene</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Clientes nuevos por mes</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="columns" role="img" aria-label="Clientes nuevos de los últimos 6 meses">
+                            <div class="column" th:each="b : ${clientesPorMes}">
+                                <span class="column-value" th:text="${b.texto}">0</span>
+                                <div class="column-track"><span th:class="'column-fill column-fill-dark h-' + ${b.porcentaje / 5 * 5}"></span></div>
+                                <span class="column-label" th:text="${b.etiqueta}">Ene</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Barras horizontales -->
+                <section class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Suscripciones activas por plan</h2>
+                    </div>
+                    <div class="card-body">
+                        <p th:if="${#lists.isEmpty(suscripcionesPorPlan)}" class="info-note">No hay suscripciones activas.</p>
+                        <div class="hbars">
+                            <div class="hbar" th:each="b : ${suscripcionesPorPlan}">
+                                <span class="hbar-label" th:text="${b.etiqueta}">Pro</span>
+                                <div class="meter"><span th:class="'meter-fill w-' + ${b.porcentaje / 5 * 5}"></span></div>
+                                <span class="hbar-value" th:text="${b.texto}">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Clases más llenas</h2>
+                    </div>
+                    <div class="card-body">
+                        <p th:if="${#lists.isEmpty(ocupacionClases)}" class="info-note">No hay clases con capacidad definida.</p>
+                        <div class="hbars">
+                            <div class="hbar" th:each="b : ${ocupacionClases}">
+                                <span class="hbar-label" th:text="${b.etiqueta}">Spinning</span>
+                                <div class="meter"><span th:class="'meter-fill w-' + ${b.porcentaje / 5 * 5}"
+                                        th:classappend="${b.porcentaje >= 100} ? 'meter-full'"></span></div>
+                                <span class="hbar-value" th:text="${b.texto}">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

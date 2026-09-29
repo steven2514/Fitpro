@@ -1,14 +1,17 @@
 package com.proyecto.fitpro.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.util.List;
 
 @Entity
-@Table(name = "Cliente")
+@Table(name = "cliente")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,36 +22,52 @@ public class Cliente {
     @Column(name = "idCliente")
     private Integer idCliente;
 
+    @NotBlank(message = "El nombre es requerido")
+    @Size(min = 2, max = 50, message = "El nombre debe tener entre 2 y 50 caracteres")
     @Column(name = "nombre", nullable = false, length = 50)
     private String nombre;
 
+    @NotBlank(message = "El apellido es requerido")
+    @Size(min = 2, max = 50, message = "El apellido debe tener entre 2 y 50 caracteres")
     @Column(name = "apellido", nullable = false, length = 50)
     private String apellido;
 
     @Column(name = "documento", unique = true, length = 30)
     private String documento;
 
-    @Column(name = "email", length = 100)
+    @Email(message = "Email inválido")
+    @Column(name = "email", length = 100, unique = true)
     private String email;
 
+    @Pattern(regexp = "^[0-9+\\-\\s()]*$", message = "Teléfono inválido")
     @Column(name = "telefono", length = 20)
     private String telefono;
 
     @Column(name = "direccion", length = 100)
     private String direccion;
 
+    // Guarda el hash BCrypt; la longitud mínima se valida sobre la contraseña en claro, en los DTO
     @Column(name = "password", length = 255)
     private String password;
 
+    @Positive(message = "El peso debe ser mayor a 0")
+    @DecimalMin(value = "30.0", message = "El peso debe ser al menos 30 kg")
+    @DecimalMax(value = "300.0", message = "El peso no puede exceder 300 kg")
     @Column(name = "peso")
     private Double peso;
 
+    @Positive(message = "La altura debe ser mayor a 0")
+    @DecimalMin(value = "1.40", message = "La altura debe ser al menos 1.40 m")
+    @DecimalMax(value = "2.20", message = "La altura no puede exceder 2.20 m")
     @Column(name = "altura")
     private Double altura;
 
+    @Min(value = 13, message = "La edad mínima es 13 años")
+    @Max(value = 100, message = "La edad no puede exceder 100 años")
     @Column(name = "edad")
     private Integer edad;
 
+    @Pattern(regexp = "^(Masculino|Femenino|Otro)$|^$", message = "Género inválido")
     @Column(name = "genero", length = 20)
     private String genero;
 
@@ -61,18 +80,21 @@ public class Cliente {
     @Column(name = "fecha_registro")
     private LocalDate fechaRegistro;
 
-    @OneToMany(mappedBy = "cliente", fetch = FetchType.LAZY)
-    private List<Administrador> administradores;
-
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "cliente", fetch = FetchType.LAZY)
     private List<Rutina> rutinas;
 
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "cliente", fetch = FetchType.LAZY)
     private List<Alimentacion> alimentaciones;
 
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-            name = "Cliente_has_Clase",
+            name = "cliente_has_clase",
             joinColumns = @JoinColumn(name = "Cliente_idCliente"),
             inverseJoinColumns = @JoinColumn(name = "Clase_idClase")
     )

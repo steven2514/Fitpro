@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments :: head('Clientes')}"></head>
+
+<body>
+    <nav th:replace="~{fragments :: admin-topbar}"></nav>
+    <div class="admin-layout">
+        <aside th:replace="~{fragments :: admin-sidebar}"></aside>
+
+        <main class="admin-main">
+            <div th:replace="~{fragments :: alertas}"></div>
+
+            <header class="page-head">
+                <div>
+                    <span class="eyebrow">Gestión</span>
+                    <h1>Clientes</h1>
+                </div>
+                <span class="badge-count" th:text="${paginaClientes.totalElements} + ' clientes'">0 clientes</span>
+            </header>
+
+            <section class="card mb-20">
+                <div class="card-body">
+                    <form th:action="@{/admin/clientes}" method="get" class="search-box mb-20">
+                        <div class="form-group">
+                            <label for="q">Buscar por nombre, documento o email</label>
+                            <input type="search" id="q" name="q" th:value="${q}" placeholder="Ej: Valentina o 1001234567">
+                        </div>
+                        <button type="submit" class="btn btn-dark">Buscar</button>
+                        <a th:if="${q != null}" th:href="@{/admin/clientes}" class="btn btn-secondary">Quitar filtro</a>
+                    </form>
+
+                    <p th:if="${paginaClientes.empty}" class="info-note"
+                        th:text="${q != null} ? 'Ningún cliente coincide con la búsqueda' : 'No hay clientes registrados'">
+                        No hay clientes registrados</p>
+
+                    <div class="table-wrap" th:unless="${paginaClientes.empty}">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Documento</th>
+                                    <th>Email</th>
+                                    <th>Teléfono</th>
+                                    <th>Registro</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="cliente : ${paginaClientes.content}">
+                                    <td th:text="${cliente.idCliente}">1</td>
+                                    <td th:text="${cliente.nombre + ' ' + cliente.apellido}">Nombre</td>
+                                    <td th:text="${cliente.documento}">Doc</td>
+                                    <td th:text="${cliente.email ?: '-'}">Email</td>
+                                    <td th:text="${cliente.telefono ?: '-'}">Tel</td>
+                                    <td th:text="${cliente.fechaRegistro != null ? #temporals.format(cliente.fechaRegistro, 'dd/MM/yyyy') : '-'}">-</td>
+                                    <td>
+                                        <a th:href="@{/admin/cliente/editar/{id}(id=${cliente.idCliente})}" class="btn btn-primary btn-sm">Editar</a>
+                                        <form th:action="@{/admin/cliente/eliminar/{id}(id=${cliente.idCliente})}" method="post"
+                                            class="inline-form" data-confirm="¿Eliminar este cliente? Se borrarán también sus rutinas, planes y suscripciones.">
+                                            <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <nav class="pagination" th:if="${paginaClientes.totalPages > 1}" aria-label="Páginas de clientes">
+                        <a th:if="${paginaClientes.hasPrevious()}" class="btn btn-secondary btn-sm"
+                            th:href="@{/admin/clientes(q=${q},pagina=${paginaClientes.number - 1})}">← Anterior</a>
+                        <span class="pagination-info"
+                            th:text="'Página ' + ${paginaClientes.number + 1} + ' de ' + ${paginaClientes.totalPages}">Página 1 de 1</span>
+                        <a th:if="${paginaClientes.hasNext()}" class="btn btn-secondary btn-sm"
+                            th:href="@{/admin/clientes(q=${q},pagina=${paginaClientes.number + 1})}">Siguiente →</a>
+                    </nav>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Nuevo cliente</h2>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/admin/cliente/crear}" method="post">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="c-nombre">Nombre *</label>
+                                <input type="text" id="c-nombre" name="nombre" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="c-apellido">Apellido *</label>
+                                <input type="text" id="c-apellido" name="apellido" required>
+                            </div>
+                        </div>
+                        <div class="grid grid-3">
+                            <div class="form-group">
+                                <label for="c-documento">Documento *</label>
+                                <input type="text" id="c-documento" name="documento" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="c-email">Email</label>
+                                <input type="email" id="c-email" name="email">
+                            </div>
+                            <div class="form-group">
+                                <label for="c-telefono">Teléfono</label>
+                                <input type="text" id="c-telefono" name="telefono">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="c-direccion">Dirección</label>
+                                <input type="text" id="c-direccion" name="direccion">
+                            </div>
+                            <div class="form-group">
+                                <label for="c-password">Contraseña inicial</label>
+                                <input type="password" id="c-password" name="password" minlength="8"
+                                    placeholder="Opcional: el cliente puede crearla con “¿Olvidaste tu contraseña?”">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Crear cliente</button>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+
+</html>

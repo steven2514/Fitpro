@@ -1,67 +1,129 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FitPro - Mi Panel</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-</head>
+<head th:replace="~{fragments :: head('Mi panel')}"></head>
 
 <body>
 
-    <nav class="navbar">
-        <div class="navbar-brand">
-            <span>💪</span>
-            <span>FitPro - Mi Panel</span>
-        </div>
-        <div class="navbar-user">
-            <span th:text="${cliente != null ? cliente.nombre + ' ' + cliente.apellido : 'Cliente'}">Cliente</span>
-            <a href="/logout" class="btn btn-danger btn-sm">🚪 Salir</a>
-        </div>
-    </nav>
-
+    <nav th:replace="~{fragments :: cliente-topbar('panel')}"></nav>
 
     <div class="panel-content">
         <div class="container-large">
 
+            <!-- Mensajes de éxito/error de cualquier acción del panel -->
+            <div th:replace="~{fragments :: alertas}"></div>
 
-            <div class="section">
-                <h2 class="section-title">👤 Mi Información Personal</h2>
+            <!-- Avisos del plan: por vencer o ya vencido -->
+            <div th:if="${suscripcion != null and suscripcion.porVencer}" class="alert alert-warning" role="status">
+                <strong>Tu plan <span th:text="${suscripcion.plan.nombre}">Pro</span> vence
+                    <span th:text="${suscripcion.diasRestantes == 0} ? 'hoy' : 'en ' + ${suscripcion.diasRestantes} + ' día(s)'">pronto</span>.</strong>
+                Renuévalo en <a href="#plan">Mi plan</a> para no perder tus clases.
+            </div>
+            <div th:if="${planVencido != null}" class="alert alert-error" role="alert">
+                <strong>Tu plan <span th:text="${planVencido.plan.nombre}">Pro</span> venció el
+                    <span th:text="${#temporals.format(planVencido.fechaFin, 'dd/MM/yyyy')}">-</span>.</strong>
+                Elige un plan en <a href="#plan">Mi plan</a> para seguir entrenando con nosotros.
+            </div>
+
+            <!-- Bienvenida con el resumen del cliente -->
+            <section class="welcome">
+                <div>
+                    <span class="eyebrow">Hola de nuevo</span>
+                    <h1 th:text="${cliente.nombre} + ', ¡a entrenar!'">¡A entrenar!</h1>
+                    <p class="welcome-lead" th:text="${cliente.objetivoFitness != null} ? 'Tu objetivo: ' + ${cliente.objetivoFitness} : 'Completa tus datos físicos para personalizar tu plan.'">Objetivo</p>
+                </div>
+                <div class="welcome-stats">
+                    <div>
+                        <strong th:text="${suscripcion != null} ? ${suscripcion.plan.nombre} : 'Sin plan'">Pro</strong>
+                        <span th:text="${suscripcion != null} ? ${suscripcion.diasRestantes} + ' días restantes' : 'Elige un plan'">Plan</span>
+                    </div>
+                    <div>
+                        <strong th:text="${cliente.IMCFormateado}">-</strong>
+                        <span>IMC actual</span>
+                    </div>
+                    <div>
+                        <strong th:text="${#lists.size(clases)}">0</strong>
+                        <span>Clases por semana</span>
+                    </div>
+                    <div>
+                        <strong th:text="${#lists.size(rutinas)}">0</strong>
+                        <span>Rutinas</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==========================================
+                 MI PLAN DE SUSCRIPCIÓN
+            ========================================== -->
+            <div class="section" id="plan">
+                <h2 class="section-title">Mi Plan</h2>
+
+                <div th:if="${suscripcion != null}" class="card card-dark mb-20">
+                    <div class="card-body plan-actual">
+                        <div>
+                            <span class="eyebrow">Plan activo</span>
+                            <h3 class="plan-actual-nombre" th:text="${suscripcion.plan.nombre}">Pro</h3>
+                            <p class="plan-actual-meta">
+                                <span th:text="${suscripcion.plan.precioFormateado} + ' / mes'">$0</span> ·
+                                vence el <span th:text="${#temporals.format(suscripcion.fechaFin, 'dd/MM/yyyy')}">01/01/2026</span>
+                                (<span th:text="${suscripcion.diasRestantes}">0</span> días restantes)
+                            </p>
+                            <ul class="plan-actual-beneficios">
+                                <li th:each="b : ${suscripcion.plan.listaBeneficios}" th:text="${b}">Beneficio</li>
+                            </ul>
+                        </div>
+                        <form th:action="@{/cliente/suscripcion/cancelar}" method="post"
+                            data-confirm="¿Seguro que quieres cancelar tu suscripción?">
+                            <button type="submit" class="btn btn-outline-light btn-sm">Cancelar suscripción</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div th:if="${suscripcion == null}" class="alert alert-warning">
+                    No tienes un plan activo. Elige uno para empezar: con los planes Pro y Élite puedes inscribirte tú
+                    mismo en las clases grupales.
+                </div>
+
+                <div class="pricing-grid" th:if="${not #lists.isEmpty(planes)}">
+                    <article class="price-card" th:each="plan : ${planes}"
+                        th:with="esActual=${suscripcion != null and suscripcion.plan.idPlan == plan.idPlan}"
+                        th:classappend="${plan.destacado} ? 'price-card-featured'">
+                        <span class="price-flag" th:if="${esActual}">Tu plan</span>
+                        <span class="price-flag" th:if="${!esActual and plan.destacado}">Más elegido</span>
+                        <h3 th:text="${plan.nombre}">Plan</h3>
+                        <p class="price-desc" th:text="${plan.descripcion}">Descripción</p>
+                        <p class="price-amount">
+                            <strong th:text="${plan.precioFormateado}">$0</strong>
+                            <span th:text="${plan.duracionDias == 30 ? '/ mes' : '/ ' + plan.duracionDias + ' días'}">/ mes</span>
+                        </p>
+                        <ul class="price-features">
+                            <li th:each="beneficio : ${plan.listaBeneficios}" th:text="${beneficio}">Beneficio</li>
+                        </ul>
+                        <button th:if="${esActual}" type="button" class="btn btn-block btn-outline" disabled>Plan actual</button>
+                        <form th:unless="${esActual}" th:action="@{/cliente/suscripcion}" method="post"
+                            th:attr="data-confirm=${suscripcion != null ? '¿Cambiar tu plan actual por ' + plan.nombre + '?' : null}">
+                            <input type="hidden" name="idPlan" th:value="${plan.idPlan}">
+                            <button type="submit" class="btn btn-block"
+                                th:classappend="${plan.destacado} ? 'btn-primary' : 'btn-outline'"
+                                th:text="${suscripcion != null} ? 'Cambiar a este plan' : 'Elegir plan'">Elegir plan</button>
+                        </form>
+                    </article>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 MI SEMANA (horario de mis clases)
+            ========================================== -->
+            <div class="section" id="semana">
+                <h2 class="section-title">Mi semana</h2>
                 <div class="card">
                     <div class="card-body">
-                        <div class="grid grid-3">
-                            <!-- Datos personales -->
-                            <div class="info-box">
-                                <h4>📋 Datos Personales</h4>
-                                <p><strong>Nombre:</strong> <span
-                                        th:text="${cliente.nombre + ' ' + cliente.apellido}">Nombre</span></p>
-                                <p><strong>Documento:</strong> <span th:text="${cliente.documento}">Documento</span></p>
-                                <p><strong>Teléfono:</strong> <span th:text="${cliente.telefono}">Teléfono</span></p>
-                            </div>
-
-                            <!-- Contacto -->
-                            <div class="info-box">
-                                <h4>📧 Contacto</h4>
-                                <p><strong>Email:</strong> <span
-                                        th:text="${cliente.email != null ? cliente.email : 'No registrado'}">Email</span>
-                                </p>
-                                <p><strong>Dirección:</strong> <span
-                                        th:text="${cliente.direccion != null ? cliente.direccion : 'No registrada'}">Dirección</span>
-                                </p>
-                            </div>
-
-                            <!-- Estado -->
-                            <div class="info-box">
-                                <h4>📊 Estado</h4>
-                                <p><strong>ID Cliente:</strong> <span th:text="${cliente.idCliente}">ID</span></p>
-                                <p><strong>Rutinas:</strong> <span
-                                        th:text="${rutinas != null ? #lists.size(rutinas) : 0}">0</span></p>
-                                <p><strong>Planes:</strong> <span
-                                        th:text="${alimentaciones != null ? #lists.size(alimentaciones) : 0}">0</span>
-                                </p>
-                            </div>
-                        </div>
+                        <p th:if="${miSemana.vacio}" class="info-note">
+                            Aún no tienes clases con horario. <a href="#clases">Inscríbete en una clase</a> y aparecerá aquí.
+                        </p>
+                        <th:block th:unless="${miSemana.vacio}">
+                            <div th:replace="~{fragments :: horario(${miSemana})}"></div>
+                        </th:block>
                     </div>
                 </div>
             </div>
@@ -69,29 +131,25 @@
             <!-- ==========================================
                  MIS DATOS FÍSICOS (US-011)
             ========================================== -->
-            <div class="section">
-                <h2 class="section-title">📊 Mis Datos Físicos</h2>
-
-                <!-- Mensajes de éxito/error -->
-                <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-                <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+            <div class="section" id="datos">
+                <h2 class="section-title">Mis Datos Físicos</h2>
 
                 <div class="card">
                     <div class="card-body">
-                        <form action="/cliente/actualizar-datos-fisicos" method="post">
+                        <form th:action="@{/cliente/actualizar-datos-fisicos}" method="post">
                             <div class="grid grid-3">
                                 <div class="form-group">
-                                    <label>⚖️ Peso (kg) *</label>
+                                    <label>Peso (kg) *</label>
                                     <input type="number" name="peso" step="0.1" th:value="${cliente.peso}"
                                         placeholder="Ej: 70.5" required>
                                 </div>
                                 <div class="form-group">
-                                    <label>📏 Altura (m) *</label>
+                                    <label>Altura (m) *</label>
                                     <input type="number" name="altura" step="0.01" th:value="${cliente.altura}"
                                         placeholder="Ej: 1.75" required>
                                 </div>
                                 <div class="form-group">
-                                    <label>🎂 Edad *</label>
+                                    <label>Edad *</label>
                                     <input type="number" name="edad" th:value="${cliente.edad}" placeholder="Ej: 25"
                                         required>
                                 </div>
@@ -99,7 +157,7 @@
 
                             <div class="grid grid-2">
                                 <div class="form-group">
-                                    <label>👤 Género *</label>
+                                    <label>Género *</label>
                                     <select name="genero" required>
                                         <option value="">Seleccione su género</option>
                                         <option value="Masculino" th:selected="${cliente.genero == 'Masculino'}">
@@ -115,7 +173,7 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label>🏃 Nivel de Actividad *</label>
+                                    <label>Nivel de Actividad *</label>
                                     <select name="nivelActividad" required>
                                         <option value="">Seleccione nivel</option>
                                         <option value="Sedentario"
@@ -140,42 +198,38 @@
                             </div>
 
                             <div class="form-group">
-                                <label>🎯 Objetivo Fitness *</label>
+                                <label>Objetivo Fitness *</label>
                                 <input type="text" name="objetivoFitness" th:value="${cliente.objetivoFitness}"
                                     placeholder="Ej: Perder peso, Ganar masa muscular, Tonificar" required>
                             </div>
 
                             <button type="submit" class="btn btn-primary btn-block">
-                                💾 Guardar Datos Físicos
+                                Guardar Datos Físicos
                             </button>
                         </form>
 
                         <!-- Mostrar IMC y estadísticas si hay datos -->
                         <div th:if="${cliente.peso != null and cliente.altura != null}" class="mt-20">
-                            <h3 style="margin-bottom: 20px;">📈 Tus Estadísticas</h3>
+                            <h3 class="subsection-title">Tus Estadísticas</h3>
                             <div class="grid grid-3">
-                                <div class="stats-card"
-                                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <div class="stats-card stat-dark">
                                     <p>Tu IMC</p>
                                     <h3
                                         th:text="${#numbers.formatDecimal(cliente.peso / (cliente.altura * cliente.altura), 1, 2)}">
                                         0.00
                                     </h3>
                                 </div>
-                                <div class="stats-card" th:style="${cliente.peso / (cliente.altura * cliente.altura) < 18.5 ? 'background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);' : 
-                                               (cliente.peso / (cliente.altura * cliente.altura) < 25 ? 'background: linear-gradient(135deg, #10b981 0%, #059669 100%);' : 
-                                               (cliente.peso / (cliente.altura * cliente.altura) < 30 ? 'background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);' : 
-                                               'background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);'))}">
+                                <div class="stats-card"
+                                    th:classappend="${cliente.peso / (cliente.altura * cliente.altura) < 18.5 ? 'stat-yellow' : (cliente.peso / (cliente.altura * cliente.altura) < 25 ? 'stat-green' : (cliente.peso / (cliente.altura * cliente.altura) < 30 ? 'stat-yellow' : 'stat-red'))}">
                                     <p>Categoría</p>
-                                    <h3 style="font-size: 18px;"
+                                    <h3 class="stat-text"
                                         th:text="${cliente.peso / (cliente.altura * cliente.altura) < 18.5 ? 'Bajo Peso' : 
                                                  (cliente.peso / (cliente.altura * cliente.altura) < 25 ? 'Peso Normal' : 
                                                  (cliente.peso / (cliente.altura * cliente.altura) < 30 ? 'Sobrepeso' : 'Obesidad'))}">
                                         Normal
                                     </h3>
                                 </div>
-                                <div class="stats-card"
-                                    style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);">
+                                <div class="stats-card stat-accent">
                                     <p>Peso Ideal</p>
                                     <h3
                                         th:text="${#numbers.formatDecimal(22.5 * (cliente.altura * cliente.altura), 1, 1)} + ' kg'">
@@ -185,12 +239,12 @@
                             </div>
 
                             <div class="info-box mt-20">
-                                <h4>ℹ️ Información sobre tu IMC</h4>
+                                <h4>Información sobre tu IMC</h4>
                                 <p><strong>Bajo peso:</strong> IMC menor a 18.5</p>
                                 <p><strong>Peso normal:</strong> IMC entre 18.5 y 24.9</p>
                                 <p><strong>Sobrepeso:</strong> IMC entre 25 y 29.9</p>
                                 <p><strong>Obesidad:</strong> IMC mayor a 30</p>
-                                <p style="margin-top: 10px; color: #888; font-size: 13px;">
+                                <p class="info-note">
                                     * El peso ideal se calcula usando un IMC de 22.5 (punto medio del rango saludable)
                                 </p>
                             </div>
@@ -198,7 +252,7 @@
 
                         <!-- Mensaje si no hay datos -->
                         <div th:if="${cliente.peso == null or cliente.altura == null}" class="info-box mt-20">
-                            <h4>📋 Completa tus datos físicos</h4>
+                            <h4>Completa tus datos físicos</h4>
                             <p>
                                 Registra tu información física para que podamos brindarte
                                 recomendaciones personalizadas y hacer seguimiento de tu progreso.
@@ -209,16 +263,78 @@
             </div>
 
 
+            <!-- ==========================================
+                 MI PROGRESO (historial de peso)
+            ========================================== -->
+            <div class="section" id="progreso">
+                <h2 class="section-title">Mi Progreso</h2>
+
+                <div th:if="${#lists.isEmpty(historialPeso)}" class="card">
+                    <div class="card-body empty-state">
+                        <p class="empty-title">Aún no hay mediciones</p>
+                        <p class="empty-text">Cada vez que guardes tus datos físicos quedará registrado aquí tu peso.</p>
+                    </div>
+                </div>
+
+                <div th:unless="${#lists.isEmpty(historialPeso)}" class="card">
+                    <div class="card-body">
+                        <div th:if="${grafico != null}" class="chart">
+                            <div class="chart-head">
+                                <div>
+                                    <span class="eyebrow">Evolución del peso</span>
+                                    <p class="chart-range">
+                                        Entre <strong th:text="${grafico.pesoMin} + ' kg'">0 kg</strong> y
+                                        <strong th:text="${grafico.pesoMax} + ' kg'">0 kg</strong>
+                                    </p>
+                                </div>
+                                <span class="badge" th:classappend="${grafico.bajo} ? 'badge-success' : 'badge-warning'"
+                                    th:text="${grafico.variacion}">0 kg</span>
+                            </div>
+                            <svg class="chart-svg" viewBox="0 0 900 200" role="img"
+                                th:attr="aria-label='Evolución del peso: variación de ' + ${grafico.variacion}">
+                                <line x1="16" y1="184" x2="884" y2="184" class="chart-axis" />
+                                <polyline th:attr="points=${grafico.puntos}" class="chart-line" />
+                                <circle th:each="m : ${grafico.marcas}" th:attr="cx=${m.x},cy=${m.y}" r="5" class="chart-dot">
+                                    <title th:text="${m.etiqueta}">peso</title>
+                                </circle>
+                            </svg>
+                        </div>
+                        <p th:if="${grafico == null}" class="info-note">
+                            Registra tu peso otro día para ver tu gráfico de evolución.
+                        </p>
+
+                        <div class="table-wrap mt-20">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Peso</th>
+                                        <th>IMC</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="r : ${historialPeso}">
+                                        <td th:text="${#temporals.format(r.fecha, 'dd/MM/yyyy')}">01/01/2026</td>
+                                        <td th:text="${#numbers.formatDecimal(r.peso, 1, 1)} + ' kg'">0 kg</td>
+                                        <td th:text="${#numbers.formatDecimal(r.imc, 1, 1)}">0</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="section">
-                <h2 class="section-title">🏋️ Mis Rutinas de Entrenamiento</h2>
+                <h2 class="section-title">Mis Rutinas de Entrenamiento</h2>
 
                 <!-- Si no hay rutinas -->
                 <div th:if="${rutinas == null or #lists.isEmpty(rutinas)}" class="card">
-                    <div class="card-body text-center">
-                        <p style="color: #888; font-size: 18px; padding: 40px;">
-                            ⚠️ Aún no tienes rutinas asignadas
+                    <div class="card-body empty-state">
+                        <p class="empty-title">
+                            Aún no tienes rutinas asignadas
                         </p>
-                        <p style="color: #666;">
+                        <p class="empty-text">
                             Contacta a tu entrenador para que te asigne una rutina personalizada
                         </p>
                     </div>
@@ -232,35 +348,34 @@
                             <span class="badge badge-primary" th:text="${rutina.nivel}">Nivel</span>
                         </div>
                         <div class="card-body">
-                            <div class="item-list">
-                                <div class="item">
-                                    <p class="item-title">🎯 Objetivo</p>
-                                    <p class="item-detail" th:text="${rutina.objetivo}">Objetivo</p>
-                                </div>
-                                <div class="item">
-                                    <p class="item-title">📈 Nivel</p>
-                                    <p class="item-detail" th:text="${rutina.nivel}">Nivel</p>
-                                </div>
-                                <div class="item">
-                                    <p class="item-title">💡 Recomendaciones</p>
-                                    <p class="item-detail">
-                                        • Realiza calentamiento antes de empezar<br>
-                                        • Mantén una postura correcta<br>
-                                        • Hidrátate constantemente<br>
-                                        • Descansa entre series
-                                    </p>
-                                </div>
-                            </div>
+                            <p class="item-detail mb-20"><strong>Objetivo:</strong> <span th:text="${rutina.objetivo}">Objetivo</span></p>
+
+                            <ol class="exercise-list" th:if="${not #lists.isEmpty(rutina.ejercicios)}">
+                                <li th:each="ej : ${rutina.ejercicios}">
+                                    <div>
+                                        <p class="item-title" th:text="${ej.nombre}">Ejercicio</p>
+                                        <p class="item-detail" th:if="${ej.notas != null}" th:text="${ej.notas}">Notas</p>
+                                    </div>
+                                    <div class="exercise-meta">
+                                        <span class="badge badge-primary" th:text="${ej.series + ' × ' + ej.repeticiones}">3 × 12</span>
+                                        <span class="badge badge-warning" th:if="${ej.descansoSegundos != null}"
+                                            th:text="${ej.descansoSegundos + ' s descanso'}">60 s</span>
+                                    </div>
+                                </li>
+                            </ol>
+                            <p th:if="${#lists.isEmpty(rutina.ejercicios)}" class="info-note">
+                                Tu entrenador aún no ha cargado los ejercicios de esta rutina.
+                            </p>
                         </div>
                     </div>
 
                     <!-- Tarjeta de bienestar -->
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">🧘 Bienestar Mental</h3>
+                            <h3 class="card-title">Bienestar Mental</h3>
                         </div>
                         <div class="card-body">
-                            <ul style="line-height: 2; color: #666;">
+                            <ul class="tips-list">
                                 <li>Practica meditación o mindfulness</li>
                                 <li>Mantén una actitud positiva</li>
                                 <li>Celebra tus logros, por pequeños que sean</li>
@@ -276,15 +391,15 @@
                  MI PLAN ALIMENTICIO
             ========================================== -->
             <div class="section">
-                <h2 class="section-title">🍎 Mi Plan Alimenticio</h2>
+                <h2 class="section-title">Mi Plan Alimenticio</h2>
 
                 <!-- Si no hay alimentación -->
                 <div th:if="${alimentaciones == null or #lists.isEmpty(alimentaciones)}" class="card">
-                    <div class="card-body text-center">
-                        <p style="color: #888; font-size: 18px; padding: 40px;">
-                            ⚠️ Aún no tienes plan alimenticio asignado
+                    <div class="card-body empty-state">
+                        <p class="empty-title">
+                            Aún no tienes plan alimenticio asignado
                         </p>
-                        <p style="color: #666;">
+                        <p class="empty-text">
                             Consulta con tu nutricionista para obtener un plan personalizado
                         </p>
                     </div>
@@ -295,18 +410,15 @@
                     <div class="card">
                         <div class="card-body">
                             <div class="grid grid-3">
-                                <div class="stats-card"
-                                    style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                                <div class="stats-card stat-green">
                                     <p>Total de Comidas</p>
                                     <h3 th:text="${#lists.size(alimentaciones)}">0</h3>
                                 </div>
-                                <div class="stats-card"
-                                    style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                                <div class="stats-card stat-yellow">
                                     <p>Calorías Totales</p>
                                     <h3 th:text="${#aggregates.sum(alimentaciones.![calorias])} + ' kcal'">0</h3>
                                 </div>
-                                <div class="stats-card"
-                                    style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);">
+                                <div class="stats-card stat-accent">
                                     <p>Tipos de Comida</p>
                                     <h3 th:text="${#sets.size(#sets.toSet(alimentaciones.![tipoComida]))}">0</h3>
                                 </div>
@@ -314,7 +426,7 @@
 
                             <!-- Detalle del plan -->
                             <div class="mt-20">
-                                <h3 style="margin-bottom: 20px;">📋 Detalle del Plan</h3>
+                                <h3 class="subsection-title">Detalle del Plan</h3>
                                 <div class="item-list">
                                     <div class="item" th:each="alimentacion : ${alimentaciones}">
                                         <div class="flex-between">
@@ -334,12 +446,12 @@
 
                             <!-- Consejos -->
                             <div class="info-box mt-20">
-                                <h4>💡 Consejos Nutricionales</h4>
-                                <p>✓ Come cada 3-4 horas para mantener tu metabolismo activo</p>
-                                <p>✓ Bebe al menos 2 litros de agua al día</p>
-                                <p>✓ Incluye proteínas en cada comida</p>
-                                <p>✓ Consume frutas y verduras variadas</p>
-                                <p>✓ Evita alimentos procesados y azúcares refinados</p>
+                                <h4>Consejos Nutricionales</h4>
+                                <p>Come cada 3-4 horas para mantener tu metabolismo activo</p>
+                                <p>Bebe al menos 2 litros de agua al día</p>
+                                <p>Incluye proteínas en cada comida</p>
+                                <p>Consume frutas y verduras variadas</p>
+                                <p>Evita alimentos procesados y azúcares refinados</p>
                             </div>
                         </div>
                     </div>
@@ -350,13 +462,13 @@
                  MIS ENTRENADORES
             ========================================== -->
             <div class="section">
-                <h2 class="section-title">👨‍🏫 Mis Entrenadores</h2>
+                <h2 class="section-title">Mis Entrenadores</h2>
 
                 <!-- Si no hay entrenadores -->
                 <div th:if="${entrenadores == null or #lists.isEmpty(entrenadores)}" class="card">
-                    <div class="card-body text-center">
-                        <p style="color: #888; font-size: 18px; padding: 40px;">
-                            ⚠️ Aún no tienes entrenadores asignados
+                    <div class="card-body empty-state">
+                        <p class="empty-title">
+                            Aún no tienes entrenadores asignados
                         </p>
                     </div>
                 </div>
@@ -370,19 +482,19 @@
                         <div class="card-body">
                             <div class="item-list">
                                 <div class="item">
-                                    <p class="item-title">🎯 Especialidad</p>
+                                    <p class="item-title">Especialidad</p>
                                     <p class="item-detail" th:text="${entrenador.especialidad}">Especialidad</p>
                                 </div>
                                 <div class="item">
-                                    <p class="item-title">🕐 Horario</p>
+                                    <p class="item-title">Horario</p>
                                     <p class="item-detail" th:text="${entrenador.horario}">Horario</p>
                                 </div>
                                 <div class="item" th:if="${entrenador.email != null}">
-                                    <p class="item-title">📧 Email</p>
+                                    <p class="item-title">Email</p>
                                     <p class="item-detail" th:text="${entrenador.email}">Email</p>
                                 </div>
                                 <div class="item" th:if="${entrenador.telefono != null}">
-                                    <p class="item-title">📞 Teléfono</p>
+                                    <p class="item-title">Teléfono</p>
                                     <p class="item-detail" th:text="${entrenador.telefono}">Teléfono</p>
                                 </div>
                             </div>
@@ -394,17 +506,17 @@
             <!-- ==========================================
                                          MIS CLASES
                                     ========================================== -->
-            <div class="section">
-                <h2 class="section-title">📚 Mis Clases</h2>
+            <div class="section" id="clases">
+                <h2 class="section-title">Mis Clases</h2>
 
                 <!-- Si no hay clases -->
                 <div th:if="${clases == null or #lists.isEmpty(clases)}" class="card">
-                    <div class="card-body text-center">
-                        <p style="color: #888; font-size: 18px; padding: 40px;">
-                            ⚠️ Aún no estás inscrito en ninguna clase
+                    <div class="card-body empty-state">
+                        <p class="empty-title">
+                            Aún no estás inscrito en ninguna clase
                         </p>
-                        <p style="color: #666;">
-                            Consulta con el administrador para inscribirte en las clases disponibles
+                        <p class="empty-text">
+                            Mira las clases disponibles más abajo e inscríbete.
                         </p>
                     </div>
                 </div>
@@ -419,23 +531,58 @@
                         <div class="card-body">
                             <div class="item-list">
                                 <div class="item">
-                                    <p class="item-title">📝 Descripción</p>
+                                    <p class="item-title">Descripción</p>
                                     <p class="item-detail" th:text="${clase.descripcion}">Descripción</p>
                                 </div>
                                 <div class="item">
-                                    <p class="item-title">👥 Capacidad</p>
-                                    <p class="item-detail" th:text="${clase.capacidad + ' personas'}">Capacidad</p>
+                                    <p class="item-title">Horario</p>
+                                    <p class="item-detail" th:text="${clase.horarioTexto}">Lunes 18:00</p>
                                 </div>
                                 <div class="item" th:if="${clase.entrenador != null}">
-                                    <p class="item-title">👨‍🏫 Entrenador</p>
+                                    <p class="item-title">Entrenador</p>
                                     <p class="item-detail" th:text="${clase.entrenador.nombre}">Entrenador</p>
                                 </div>
                                 <div class="item"
                                     th:if="${clase.entrenador != null and clase.entrenador.especialidad != null}">
-                                    <p class="item-title">🎯 Especialidad</p>
+                                    <p class="item-title">Especialidad</p>
                                     <p class="item-detail" th:text="${clase.entrenador.especialidad}">Especialidad</p>
                                 </div>
                             </div>
+                            <form th:action="@{/cliente/clase/{id}/cancelar(id=${clase.idClase})}" method="post"
+                                class="mt-20" th:attr="data-confirm='¿Cancelar tu inscripción en ' + ${clase.nombre} + '?'">
+                                <button type="submit" class="btn btn-danger btn-sm">Cancelar inscripción</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clases a las que el cliente puede inscribirse por su cuenta -->
+                <h3 class="subsection-title mt-32">Clases disponibles</h3>
+                <div th:if="${!puedeInscribirse}" class="alert alert-info">
+                    Para inscribirte tú mismo necesitas un plan que incluya clases (Pro o Élite).
+                    <a href="#plan">Ver planes</a>
+                </div>
+                <div th:if="${#lists.isEmpty(clasesDisponibles)}" class="card">
+                    <div class="card-body empty-state">
+                        <p class="empty-text">No hay otras clases disponibles por ahora.</p>
+                    </div>
+                </div>
+                <div th:unless="${#lists.isEmpty(clasesDisponibles)}" class="grid grid-3">
+                    <div class="card" th:each="clase : ${clasesDisponibles}">
+                        <div class="card-header">
+                            <h3 class="card-title" th:text="${clase.nombre}">Clase</h3>
+                            <span class="badge" th:classappend="${clase.llena} ? 'badge-warning' : 'badge-success'"
+                                th:text="${clase.llena} ? 'Llena' : (${clase.capacidad != null} ? ${clase.cuposDisponibles} + ' cupos' : 'Cupos libres')">cupos</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="class-when" th:text="${clase.horarioTexto}">Lunes 18:00 – 19:00</p>
+                            <p class="item-detail" th:text="${clase.descripcion}">Descripción</p>
+                            <p class="info-note" th:if="${clase.entrenador != null}"
+                                th:text="'Con ' + ${clase.entrenador.nombre}">Entrenador</p>
+                            <form th:action="@{/cliente/clase/{id}/inscribir(id=${clase.idClase})}" method="post" class="mt-20">
+                                <button type="submit" class="btn btn-primary btn-sm btn-block"
+                                    th:disabled="${clase.llena or !puedeInscribirse}">Inscribirme</button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -446,15 +593,15 @@
                  RECOMENDACIONES GENERALES
             ========================================== -->
             <div class="section">
-                <h2 class="section-title">💡 Recomendaciones Generales</h2>
+                <h2 class="section-title">Recomendaciones Generales</h2>
                 <div class="grid grid-2">
                     <!-- Ejercicio -->
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">🏃 Ejercicio</h3>
+                            <h3 class="card-title">Ejercicio</h3>
                         </div>
                         <div class="card-body">
-                            <ul style="line-height: 2; color: #666;">
+                            <ul class="tips-list">
                                 <li>Entrena al menos 3-4 veces por semana</li>
                                 <li>Alterna ejercicios cardiovasculares y de fuerza</li>
                                 <li>Descansa adecuadamente entre sesiones</li>
@@ -467,10 +614,10 @@
                     <!-- Descanso -->
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">😴 Descanso</h3>
+                            <h3 class="card-title">Descanso</h3>
                         </div>
                         <div class="card-body">
-                            <ul style="line-height: 2; color: #666;">
+                            <ul class="tips-list">
                                 <li>Duerme entre 7-9 horas diarias</li>
                                 <li>Mantén un horario regular de sueño</li>
                                 <li>Evita pantallas antes de dormir</li>
@@ -483,10 +630,10 @@
                     <!-- Hidratación -->
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">💧 Hidratación</h3>
+                            <h3 class="card-title">Hidratación</h3>
                         </div>
                         <div class="card-body">
-                            <ul style="line-height: 2; color: #666;">
+                            <ul class="tips-list">
                                 <li>Bebe al menos 2-3 litros de agua al día</li>
                                 <li>Aumenta la ingesta durante el ejercicio</li>
                                 <li>No esperes a tener sed para beber</li>
@@ -503,23 +650,23 @@
                  CONTACTO
             ========================================== -->
             <div class="section">
-                <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div class="card card-dark">
                     <div class="card-body text-center">
-                        <h3 style="color: white; margin-bottom: 15px;">¿Necesitas ayuda o asesoría?</h3>
-                        <p style="margin-bottom: 20px; opacity: 0.9;">
+                        <h3 class="subsection-title">¿Necesitas ayuda o asesoría?</h3>
+                        <p class="mb-20">
                             Nuestro equipo de profesionales está listo para ayudarte a alcanzar tus objetivos
                         </p>
                         <div class="flex-center gap-20">
                             <div>
-                                <p style="font-weight: bold;">📧 Email</p>
+                                <p class="item-title">Email</p>
                                 <p>contacto@fitpro.com</p>
                             </div>
                             <div>
-                                <p style="font-weight: bold;">📞 Teléfono</p>
+                                <p class="item-title">Teléfono</p>
                                 <p>+57 300 123 4567</p>
                             </div>
                             <div>
-                                <p style="font-weight: bold;">⏰ Horario</p>
+                                <p class="item-title">Horario</p>
                                 <p>Lun - Vie: 6am - 10pm</p>
                             </div>
                         </div>

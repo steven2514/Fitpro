@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments :: head('Rutina')}"></head>
+
+<body class="centered">
+    <div class="container container-wide">
+        <a th:href="@{/entrenador/panel#rutinas}" class="back-link">← Volver a mi panel</a>
+        <span class="eyebrow" th:text="${rutina.cliente != null ? 'Rutina de ' + rutina.cliente.nombre + ' ' + rutina.cliente.apellido : 'Rutina'}">Rutina</span>
+        <h2 th:text="${rutina.nombre}">Rutina</h2>
+        <p class="item-detail mb-20">
+            <span class="badge badge-primary" th:text="${rutina.nivel}">Nivel</span>
+            <span th:text="'Objetivo: ' + ${rutina.objetivo}">Objetivo</span>
+        </p>
+
+        <div th:replace="~{fragments :: alertas}"></div>
+
+        <p th:if="${#lists.isEmpty(ejercicios)}" class="alert alert-info">Esta rutina aún no tiene ejercicios. Agrega el primero abajo.</p>
+
+        <div class="table-wrap" th:unless="${#lists.isEmpty(ejercicios)}">
+            <table>
+                <thead>
+                    <tr><th>#</th><th>Ejercicio</th><th>Series × reps</th><th>Descanso</th><th>Notas</th><th></th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="ej, estado : ${ejercicios}">
+                        <td th:text="${estado.count}">1</td>
+                        <td><strong th:text="${ej.nombre}">Sentadilla</strong></td>
+                        <td th:text="${ej.series + ' × ' + ej.repeticiones}">4 × 10</td>
+                        <td th:text="${ej.descansoSegundos != null ? ej.descansoSegundos + ' s' : '-'}">60 s</td>
+                        <td th:text="${ej.notas ?: '-'}">-</td>
+                        <td>
+                            <form th:action="@{/entrenador/rutina/{r}/ejercicio/{e}/eliminar(r=${rutina.idRutina},e=${ej.idEjercicio})}"
+                                method="post" class="inline-form" data-confirm="¿Eliminar este ejercicio?">
+                                <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card mt-20">
+            <div class="card-header">
+                <h3 class="card-title">Agregar ejercicio</h3>
+            </div>
+            <div class="card-body">
+                <form th:action="@{/entrenador/rutina/{id}/ejercicio(id=${rutina.idRutina})}" method="post" th:object="${ejercicio}">
+                    <div class="form-group">
+                        <label for="ej-nombre">Nombre *</label>
+                        <input type="text" id="ej-nombre" th:field="*{nombre}" placeholder="Ej: Press de banca" required>
+                    </div>
+                    <div class="grid grid-3">
+                        <div class="form-group">
+                            <label for="ej-series">Series *</label>
+                            <input type="number" id="ej-series" th:field="*{series}" min="1" max="20" placeholder="4" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ej-reps">Repeticiones *</label>
+                            <input type="number" id="ej-reps" th:field="*{repeticiones}" min="1" max="200" placeholder="12" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ej-descanso">Descanso (segundos)</label>
+                            <input type="number" id="ej-descanso" th:field="*{descansoSegundos}" min="0" max="600" placeholder="60">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="ej-notas">Notas</label>
+                        <input type="text" id="ej-notas" th:field="*{notas}" placeholder="Ej: Bajar controlado, 3 segundos">
+                    </div>
+                    <button type="submit" class="btn btn-dark">Agregar ejercicio</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

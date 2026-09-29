@@ -1,15 +1,38 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
-    <title>Error - FitPro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitPro - Error</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap">
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
-<body style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f5f5;font-family:sans-serif;">
-    <div style="text-align:center;background:#fff;padding:2rem;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.1);max-width:400px;">
-        <h1 style="color:#ef4444;font-size:3rem;margin:0;">Error</h1>
-        <p th:text="${error}">Ocurrió un error</p>
-        <a th:href="@{/}" style="display:inline-block;margin-top:1rem;padding:0.6rem 1.2rem;background:#667eea;color:#fff;border-radius:8px;text-decoration:none;">Volver al inicio</a>
-    </div>
+
+<body class="auth-page">
+    <header class="site-header">
+        <a th:href="@{/}" class="brand"><span class="brand-mark">F</span>FitPro</a>
+    </header>
+
+    <main class="auth-main">
+        <div class="auth-card text-center">
+            <div class="error-code" th:text="${statusCode ?: (status ?: 500)}">500</div>
+            <h1>Algo salió mal</h1>
+            <p class="lead" th:text="${error} ?: 'Ocurrió un error inesperado en el servidor.'">
+                Ocurrió un error inesperado en el servidor.
+            </p>
+
+            <div th:if="${details}" class="error-details">
+                <div th:each="detalle : ${details}">
+                    <strong th:text="${detalle.field}"></strong>: <span th:text="${detalle.defaultMessage}"></span>
+                </div>
+            </div>
+
+            <a th:href="@{/}" class="btn btn-primary btn-block">Volver al inicio</a>
+        </div>
+    </main>
 </body>
+
 </html>

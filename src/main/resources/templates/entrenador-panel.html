@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments :: head('Panel del entrenador')}"></head>
+
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a th:href="@{/}" class="brand"><span class="brand-mark">F</span>FitPro</a>
+            <span class="navbar-role">Entrenador</span>
+        </div>
+        <div class="navbar-links">
+            <a href="#horario">Horario</a>
+            <a href="#alumnos">Alumnos</a>
+            <a href="#rutinas">Rutinas</a>
+        </div>
+        <div class="navbar-user">
+            <span class="user-name" th:text="${entrenador.nombre}">Entrenador</span>
+            <form th:action="@{/logout}" method="post" class="inline-form"><button type="submit" class="btn btn-danger btn-sm">Salir</button></form>
+        </div>
+    </nav>
+
+    <div class="panel-content">
+        <div class="container-large">
+            <div th:replace="~{fragments :: alertas}"></div>
+
+            <section class="welcome">
+                <div>
+                    <span class="eyebrow" th:text="${entrenador.especialidad ?: 'Entrenador'}">Especialidad</span>
+                    <h1 th:text="'Hola, ' + ${entrenador.nombre}">Hola</h1>
+                    <p class="welcome-lead">Tus clases de la semana, tus alumnos y las rutinas que les diseñas.</p>
+                </div>
+                <div class="welcome-stats">
+                    <div><strong th:text="${#lists.size(clases)}">0</strong><span>Clases por semana</span></div>
+                    <div><strong th:text="${#lists.size(alumnos)}">0</strong><span>Alumnos</span></div>
+                    <div><strong th:text="${#lists.size(rutinas)}">0</strong><span>Rutinas creadas</span></div>
+                </div>
+            </section>
+
+            <!-- Horario -->
+            <div class="section" id="horario">
+                <h2 class="section-title">Mi horario</h2>
+                <div class="card">
+                    <div class="card-body">
+                        <p th:if="${horario.vacio}" class="info-note">Aún no tienes clases programadas. La administración asigna los horarios.</p>
+                        <th:block th:unless="${horario.vacio}">
+                            <div th:replace="~{fragments :: horario(${horario})}"></div>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clases con sus inscritos -->
+            <div class="section">
+                <h2 class="section-title">Mis clases</h2>
+                <p th:if="${#lists.isEmpty(clases)}" class="info-note">No tienes clases asignadas.</p>
+                <div class="grid grid-2" th:unless="${#lists.isEmpty(clases)}">
+                    <div class="card" th:each="c : ${clases}">
+                        <div class="card-header">
+                            <h3 class="card-title" th:text="${c.nombre}">Clase</h3>
+                            <span class="badge" th:classappend="${c.llena} ? 'badge-warning' : 'badge-success'"
+                                th:text="${c.inscritos} + (${c.capacidad != null} ? ' / ' + ${c.capacidad} : '') + ' inscritos'">0</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="class-when" th:text="${c.horarioTexto}">Lunes 18:00</p>
+                            <div class="meter mb-20"><span th:class="'meter-fill w-' + ${c.ocupacion / 5 * 5}"
+                                    th:classappend="${c.llena} ? 'meter-full'"></span></div>
+                            <p th:if="${#lists.isEmpty(c.clientes)}" class="info-note">Aún no hay inscritos.</p>
+                            <ul class="chip-list" th:unless="${#lists.isEmpty(c.clientes)}">
+                                <li th:each="cl : ${c.clientes}" th:text="${cl.nombre + ' ' + cl.apellido}">Cliente</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alumnos -->
+            <div class="section" id="alumnos">
+                <h2 class="section-title">Mis alumnos</h2>
+                <div class="card">
+                    <div class="card-body">
+                        <p th:if="${#lists.isEmpty(alumnos)}" class="info-note">Cuando alguien se inscriba en tus clases aparecerá aquí.</p>
+                        <div class="table-wrap" th:unless="${#lists.isEmpty(alumnos)}">
+                            <table>
+                                <thead>
+                                    <tr><th>Alumno</th><th>Objetivo</th><th>Nivel de actividad</th><th>IMC</th><th>Contacto</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="a : ${alumnos}">
+                                        <td><strong th:text="${a.nombre + ' ' + a.apellido}">Alumno</strong></td>
+                                        <td th:text="${a.objetivoFitness ?: '-'}">-</td>
+                                        <td th:text="${a.nivelActividad ?: '-'}">-</td>
+                                        <td>
+                                            <span th:text="${a.IMCFormateado}">-</span>
+                                            <span class="item-detail" th:if="${a.calcularIMC() != null}" th:text="${a.obtenerCategoriaIMC()}">-</span>
+                                        </td>
+                                        <td th:text="${a.email ?: (a.telefono ?: '-')}">-</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rutinas -->
+            <div class="section" id="rutinas">
+                <h2 class="section-title">Rutinas que diseñé</h2>
+                <div class="grid grid-2">
+                    <section class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Nueva rutina para un alumno</h3>
+                        </div>
+                        <div class="card-body">
+                            <p th:if="${#lists.isEmpty(alumnos)}" class="info-note">Necesitas alumnos inscritos en tus clases para crear rutinas.</p>
+                            <form th:unless="${#lists.isEmpty(alumnos)}" th:action="@{/entrenador/rutina/crear}" method="post">
+                                <div class="form-group">
+                                    <label for="r-alumno">Alumno *</label>
+                                    <select id="r-alumno" name="idCliente" required>
+                                        <option value="">Seleccione un alumno</option>
+                                        <option th:each="a : ${alumnos}" th:value="${a.idCliente}" th:text="${a.nombre + ' ' + a.apellido}"></option>
+                                    </select>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="r-nombre">Nombre *</label>
+                                        <input type="text" id="r-nombre" name="nombre" placeholder="Ej: Full body" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="r-nivel">Nivel *</label>
+                                        <select id="r-nivel" name="nivel" required>
+                                            <option value="Básico">Básico</option>
+                                            <option value="Intermedio">Intermedio</option>
+                                            <option value="Avanzado">Avanzado</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="r-objetivo">Objetivo *</label>
+                                    <input type="text" id="r-objetivo" name="objetivo" placeholder="Ej: Mejorar resistencia" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Crear y agregar ejercicios</button>
+                            </form>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Mis rutinas</h3>
+                        </div>
+                        <div class="card-body">
+                            <p th:if="${#lists.isEmpty(rutinas)}" class="info-note">Aún no has creado rutinas.</p>
+                            <ul class="agenda" th:unless="${#lists.isEmpty(rutinas)}">
+                                <li th:each="r : ${rutinas}">
+                                    <span class="badge badge-primary" th:text="${r.nivel}">Nivel</span>
+                                    <div>
+                                        <strong th:text="${r.nombre}">Rutina</strong>
+                                        <span class="item-detail"
+                                            th:text="${(r.cliente != null ? r.cliente.nombre + ' ' + r.cliente.apellido : '-') + ' · ' + #lists.size(r.ejercicios) + (#lists.size(r.ejercicios) == 1 ? ' ejercicio' : ' ejercicios')}">Alumno</span>
+                                    </div>
+                                    <a th:href="@{/entrenador/rutina/{id}(id=${r.idRutina})}" class="btn btn-secondary btn-sm">Abrir</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
