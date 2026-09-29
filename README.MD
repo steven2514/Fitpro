@@ -1,5 +1,7 @@
 # FitPro
 
+Muchas personas quieren comenzar a ejercitarse, pero no cuentan con orientación confiable, lo que genera desmotivación. Ante la falta de recursos claros y accesibles, surge FIT PRO, una plataforma digital que ofrece guías básicas, rutinas, horarios y hábitos saludables para apoyar a los principiantes y promover el ejercicio seguro y responsable.
+
 Sistema de gestión para gimnasios, con un panel para administradores y otro para clientes.
 
 **Tecnologías:** Java 21 · Spring Boot 3.2 · Spring Security · Spring Data JPA · Thymeleaf · MySQL 8
