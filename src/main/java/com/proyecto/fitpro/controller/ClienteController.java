@@ -55,7 +55,7 @@ public class ClienteController {
         Cliente cliente = clienteService.obtenerPorIdConClases(idCliente).orElse(null);
         if (cliente == null) return "redirect:/login";
 
-        List<Clase> misClases = cliente.getClases();
+        List<Clase> misClases = List.copyOf(cliente.getClases());
         Set<Integer> idsMisClases = new HashSet<>();
         misClases.forEach(c -> idsMisClases.add(c.getIdClase()));
 

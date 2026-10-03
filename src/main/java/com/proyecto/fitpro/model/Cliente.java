@@ -8,7 +8,9 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "cliente")
@@ -92,13 +94,16 @@ public class Cliente {
 
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
+    // Set y no List: así la tabla de unión tiene clave primaria (cliente, clase). Algunos MySQL
+    // gestionados (Aiven) no permiten crear tablas sin clave primaria, y además impide inscribir
+    // dos veces al mismo cliente en la misma clase.
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "cliente_has_clase",
             joinColumns = @JoinColumn(name = "Cliente_idCliente"),
             inverseJoinColumns = @JoinColumn(name = "Clase_idClase")
     )
-    private List<Clase> clases;
+    private Set<Clase> clases = new HashSet<>();
 
     @PrePersist
     public void prePersist() {

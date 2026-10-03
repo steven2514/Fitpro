@@ -25,7 +25,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -161,7 +161,7 @@ public class ClienteServiceImpl implements ClienteService {
         Clase clase = claseRepository.findById(idClase)
             .orElseThrow(() -> new NegocioException("La clase no existe"));
         if (cliente.getClases() == null) {
-            cliente.setClases(new ArrayList<>());
+            cliente.setClases(new HashSet<>());
         }
         if (cliente.getClases().stream().anyMatch(c -> c.getIdClase().equals(idClase))) {
             throw new NegocioException("Ya está inscrito en la clase \"" + clase.getNombre() + "\"");

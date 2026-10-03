@@ -19,8 +19,12 @@ import java.util.Locale;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+// Igualdad por id: las clases van en el Set de inscripciones del cliente, y si se compararan
+// por todos sus campos, editar una clase ya cargada haría que no se encontrara al quitarla.
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Clase {
 
+    @EqualsAndHashCode.Include
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idClase")

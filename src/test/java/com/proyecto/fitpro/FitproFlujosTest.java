@@ -62,7 +62,7 @@ class FitproFlujosTest {
         rutinaRepository.deleteAll();
         alimentacionRepository.deleteAll();
         clienteRepository.findAll().forEach(c -> {
-            c.setClases(new ArrayList<>());
+            c.setClases(new java.util.HashSet<>());
             clienteRepository.save(c);
         });
         clienteRepository.deleteAll();
@@ -611,6 +611,27 @@ class FitproFlujosTest {
     }
 
     @Test
+    void todasLasTablasTienenClavePrimaria() throws Exception {
+        // MySQL gestionados como Aiven rechazan crear tablas sin clave primaria
+        try (var conexion = dataSource.getConnection()) {
+            var meta = conexion.getMetaData();
+            List<String> revisadas = new ArrayList<>();
+            List<String> sinClave = new ArrayList<>();
+            try (var tablas = meta.getTables(null, "public", "%", new String[] { "TABLE" })) {
+                while (tablas.next()) {
+                    String tabla = tablas.getString("TABLE_NAME");
+                    revisadas.add(tabla);
+                    try (var claves = meta.getPrimaryKeys(null, "public", tabla)) {
+                        if (!claves.next()) sinClave.add(tabla);
+                    }
+                }
+            }
+            assertTrue(revisadas.contains("cliente_has_clase"), "No se encontraron las tablas: " + revisadas);
+            assertTrue(sinClave.isEmpty(), "Tablas sin clave primaria: " + sinClave);
+        }
+    }
+
+    @Test
     void laPaginaDeErrorSeMuestraBien() throws Exception {
         mvc.perform(get("/no-existe").with(user("1").roles("ADMIN")))
             .andExpect(status().isNotFound())
@@ -745,9 +766,7 @@ class FitproFlujosTest {
 
     private void inscribir(Cliente cliente, Clase clase) {
         Cliente c = clienteRepository.findByIdWithClases(cliente.getIdCliente()).orElseThrow();
-        List<Clase> clases = new ArrayList<>(c.getClases());
-        clases.add(clase);
-        c.setClases(clases);
+        c.getClases().add(clase);
         clienteRepository.save(c);
     }
 }
