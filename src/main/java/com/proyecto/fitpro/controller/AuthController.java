@@ -8,6 +8,8 @@ import com.proyecto.fitpro.service.ClienteService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -24,9 +26,19 @@ public class AuthController {
     private final ClienteService clienteService;
     private final AdministradorService administradorService;
 
-    public AuthController(ClienteService clienteService, AdministradorService administradorService) {
+    private final ObjectProvider<ClientRegistrationRepository> registrosOAuth;
+
+    public AuthController(ClienteService clienteService, AdministradorService administradorService,
+            ObjectProvider<ClientRegistrationRepository> registrosOAuth) {
         this.clienteService = clienteService;
         this.administradorService = administradorService;
+        this.registrosOAuth = registrosOAuth;
+    }
+
+    /** El botón "Continuar con Google" sólo se muestra si Google está configurado. */
+    @ModelAttribute("googleActivo")
+    public boolean googleActivo() {
+        return registrosOAuth.getIfAvailable() != null;
     }
 
     @GetMapping("/login")

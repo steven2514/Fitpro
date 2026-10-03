@@ -13,7 +13,7 @@ Sistema de gestión para gimnasios, con un panel para administradores y otro par
   preguntas frecuentes y contacto. Las cifras y el horario salen de la base de datos.
 
 **Clientes**
-- Registro e inicio de sesión con documento o email, y **recuperación de contraseña** por correo
+- Registro e inicio de sesión con documento o email, **o con su cuenta de Google**, y **recuperación de contraseña** por correo
   (enlace de un solo uso que caduca a los 30 minutos).
 - **Mi perfil**: editar email, teléfono y dirección, cambiar la contraseña e historial de planes.
 - **Planes de suscripción** (Básico, Pro, Élite): elegir, cambiar o cancelar el plan, con **avisos de
@@ -79,6 +79,22 @@ SPRING_PROFILES_ACTIVE=prod java -jar target/fitpro-1.0.0.jar
 ```
 
 Si todavía no hay HTTPS, añade `COOKIE_SEGURA=false` o el inicio de sesión no funcionará.
+
+### Inicio de sesión con Google (opcional)
+
+1. En <https://console.cloud.google.com>, crea un proyecto y, en **APIs y servicios → Pantalla de
+   consentimiento de OAuth**, configúrala como *Externa*.
+2. En **Credenciales → Crear credenciales → ID de cliente de OAuth** (tipo *Aplicación web*), añade
+   como URI de redireccionamiento autorizado `https://TU-DOMINIO/login/oauth2/code/google`
+   (y `http://localhost:8082/login/oauth2/code/google` para probar en local).
+3. Define estas variables con el ID y el secreto que te da Google:
+   ```
+   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID=...
+   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET=...
+   ```
+
+Sin ellas la app funciona igual, sólo que sin el botón "Continuar con Google". Quien entra con
+Google accede a la cuenta que ya tenga ese email; si no tiene ninguna, se le crea una de cliente.
 
 ## Reglas de negocio
 

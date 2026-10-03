@@ -87,6 +87,12 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
+        <!-- Inicio de sesión y registro con Google -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-client</artifactId>
+        </dependency>
+
         <!-- Dependencias para pruebas (JUnit + Spring Boot Test) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

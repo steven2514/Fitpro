@@ -48,6 +48,7 @@ class FitproFlujosTest {
     private com.proyecto.fitpro.service.NotificacionService notificacionService;
 
     @Autowired private com.proyecto.fitpro.config.IntentosLoginService intentosLogin;
+    @Autowired private com.proyecto.fitpro.config.GoogleLoginService googleLogin;
 
     @Autowired @Qualifier("crearPlanesIniciales") private ApplicationRunner crearPlanesIniciales;
 
@@ -156,6 +157,31 @@ class FitproFlujosTest {
             .andExpect(redirectedUrl("/login?bloqueado=true"));
         mvc.perform(get("/login").param("bloqueado", "true"))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("Demasiados intentos fallidos")));
+    }
+
+    @Test
+    void googleEntraEnLaCuentaExistenteOCreaUnCliente() throws Exception {
+        Cliente cliente = crearCliente("557", "clave-segura");
+        cliente.setEmail("ana@gmail.com");
+        clienteRepository.save(cliente);
+        Administrador admin = crearAdmin();
+
+        assertEquals(new com.proyecto.fitpro.config.GoogleLoginService.Cuenta(cliente.getIdCliente(), "ROLE_CLIENTE"),
+            googleLogin.cuentaPara("ana@gmail.com", "Ana", "Pérez"));
+        assertEquals("ROLE_ADMIN", googleLogin.cuentaPara(admin.getEmail(), "Admin", "FitPro").rol());
+
+        long antes = clienteRepository.count();
+        var nueva = googleLogin.cuentaPara("nuevo@gmail.com", "Luis", null);
+        assertEquals("ROLE_CLIENTE", nueva.rol());
+        assertEquals(antes + 1, clienteRepository.count());
+        Cliente creado = clienteRepository.findById(nueva.id()).orElseThrow();
+        assertEquals("Luis", creado.getNombre());
+        assertEquals("(sin apellido)", creado.getApellido());
+        assertNull(creado.getPassword(), "sin contraseña: sólo entra con Google");
+
+        // Sin credenciales de Google configuradas, el botón no aparece
+        mvc.perform(get("/login"))
+            .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Continuar con Google"))));
     }
 
     @Test

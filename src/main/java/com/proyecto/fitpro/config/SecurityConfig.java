@@ -6,16 +6,19 @@ import com.proyecto.fitpro.model.Entrenador;
 import com.proyecto.fitpro.repository.AdministradorRepository;
 import com.proyecto.fitpro.repository.ClienteRepository;
 import com.proyecto.fitpro.repository.EntrenadorRepository;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -44,13 +47,29 @@ public class SecurityConfig {
     private final AdministradorRepository administradorRepository;
     private final EntrenadorRepository entrenadorRepository;
     private final IntentosLoginService intentosLogin;
+    private final ObjectProvider<ClientRegistrationRepository> registrosOAuth;
+    private final GoogleLoginService googleLogin;
 
     public SecurityConfig(ClienteRepository clienteRepository, AdministradorRepository administradorRepository,
-            EntrenadorRepository entrenadorRepository, IntentosLoginService intentosLogin) {
+            EntrenadorRepository entrenadorRepository, IntentosLoginService intentosLogin,
+            ObjectProvider<ClientRegistrationRepository> registrosOAuth, GoogleLoginService googleLogin) {
         this.clienteRepository = clienteRepository;
         this.administradorRepository = administradorRepository;
         this.entrenadorRepository = entrenadorRepository;
         this.intentosLogin = intentosLogin;
+        this.registrosOAuth = registrosOAuth;
+        this.googleLogin = googleLogin;
+    }
+
+    /** Cada rol entra a su panel, venga del formulario o de Google. */
+    private void redirigirPorRol(HttpServletRequest request, HttpServletResponse response,
+            Authentication authentication) throws IOException {
+        String rol = authentication.getAuthorities().iterator().next().getAuthority();
+        response.sendRedirect(switch (rol) {
+            case "ROLE_ADMIN" -> "/admin/panel";
+            case "ROLE_ENTRENADOR" -> "/entrenador/panel";
+            default -> "/cliente/panel";
+        });
     }
 
     /**
@@ -89,12 +108,7 @@ public class SecurityConfig {
                 .loginProcessingUrl("/login")
                 .successHandler((request, response, authentication) -> {
                     intentosLogin.registrarExito(request.getRemoteAddr());
-                    String rol = authentication.getAuthorities().iterator().next().getAuthority();
-                    response.sendRedirect(switch (rol) {
-                        case "ROLE_ADMIN" -> "/admin/panel";
-                        case "ROLE_ENTRENADOR" -> "/entrenador/panel";
-                        default -> "/cliente/panel";
-                    });
+                    redirigirPorRol(request, response, authentication);
                 })
                 // Cada fallo suma; al llegar al máximo, la IP queda bloqueada unos minutos.
                 .failureHandler((request, response, exception) -> {
@@ -116,6 +130,17 @@ public class SecurityConfig {
                 .frameOptions(frameOptions -> frameOptions.deny())
                 .contentSecurityPolicy(csp -> csp.policyDirectives(CSP))
             );
+
+        // "Continuar con Google" sólo se activa si están configuradas las credenciales de Google
+        if (registrosOAuth.getIfAvailable() != null) {
+            http.oauth2Login(oauth -> oauth
+                .loginPage("/login")
+                .userInfoEndpoint(info -> info.oidcUserService(googleLogin))
+                .successHandler(this::redirigirPorRol)
+                .failureHandler((request, response, exception) ->
+                    response.sendRedirect(request.getContextPath() + "/login?google=error"))
+            );
+        }
 
         return http.build();
     }

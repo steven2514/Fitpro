@@ -972,6 +972,28 @@ td .btn + .inline-form {
     border-radius: 999px;
 }
 
+/* "o" entre el formulario y el botón de Google */
+.separador-o {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    color: var(--ink-soft);
+    font-size: 14px;
+}
+
+.separador-o::before,
+.separador-o::after {
+    content: "";
+    flex: 1;
+    border-top: 1px solid currentColor;
+    opacity: 0.3;
+}
+
+.btn-google {
+    gap: 10px;
+}
+
 .auth-footer {
     margin-top: 24px;
     text-align: center;
