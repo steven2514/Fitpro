@@ -17,7 +17,14 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.filter.OncePerRequestFilter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,12 +43,33 @@ public class SecurityConfig {
     private final ClienteRepository clienteRepository;
     private final AdministradorRepository administradorRepository;
     private final EntrenadorRepository entrenadorRepository;
+    private final IntentosLoginService intentosLogin;
 
     public SecurityConfig(ClienteRepository clienteRepository, AdministradorRepository administradorRepository,
-            EntrenadorRepository entrenadorRepository) {
+            EntrenadorRepository entrenadorRepository, IntentosLoginService intentosLogin) {
         this.clienteRepository = clienteRepository;
         this.administradorRepository = administradorRepository;
         this.entrenadorRepository = entrenadorRepository;
+        this.intentosLogin = intentosLogin;
+    }
+
+    /**
+     * Corta el envío del login antes de comprobar la contraseña si la IP está bloqueada: así,
+     * mientras dure el bloqueo, ni siquiera una contraseña correcta sirve para seguir probando.
+     */
+    private OncePerRequestFilter filtroLoginBloqueado() {
+        return new OncePerRequestFilter() {
+            @Override
+            protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                    FilterChain chain) throws ServletException, IOException {
+                if ("POST".equals(request.getMethod()) && (request.getContextPath() + "/login").equals(request.getRequestURI())
+                        && intentosLogin.estaBloqueada(request.getRemoteAddr())) {
+                    response.sendRedirect(request.getContextPath() + "/login?bloqueado=true");
+                    return;
+                }
+                chain.doFilter(request, response);
+            }
+        };
     }
 
     @Bean
@@ -60,6 +88,7 @@ public class SecurityConfig {
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
                 .successHandler((request, response, authentication) -> {
+                    intentosLogin.registrarExito(request.getRemoteAddr());
                     String rol = authentication.getAuthorities().iterator().next().getAuthority();
                     response.sendRedirect(switch (rol) {
                         case "ROLE_ADMIN" -> "/admin/panel";
@@ -67,9 +96,15 @@ public class SecurityConfig {
                         default -> "/cliente/panel";
                     });
                 })
-                .failureUrl("/login?error=true")
+                // Cada fallo suma; al llegar al máximo, la IP queda bloqueada unos minutos.
+                .failureHandler((request, response, exception) -> {
+                    boolean bloqueada = intentosLogin.registrarFallo(request.getRemoteAddr());
+                    response.sendRedirect(request.getContextPath()
+                        + (bloqueada ? "/login?bloqueado=true" : "/login?error=true"));
+                })
                 .permitAll()
             )
+            .addFilterBefore(filtroLoginBloqueado(), UsernamePasswordAuthenticationFilter.class)
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout=true")

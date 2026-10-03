@@ -76,7 +76,7 @@ public class RecuperacionService {
             registro.setExpira(LocalDateTime.now().plusMinutes(MINUTOS_VALIDEZ));
             tokenRepository.save(registro);
 
-            notificacionService.enviar(usuario.email(), "FitPro - Restablece tu contraseña", """
+            notificacionService.enviarEnSegundoPlano(usuario.email(), "FitPro - Restablece tu contraseña", """
                 Hola %s,
 
                 Recibimos una solicitud para restablecer tu contraseña de FitPro.

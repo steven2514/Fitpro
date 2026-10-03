@@ -9,7 +9,8 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.0</version>
+        <!-- 3.5.x: la 3.2 dejó de recibir parches de seguridad en noviembre de 2024 -->
+        <version>3.5.16</version>
         <relativePath/> <!-- busca el padre en el repositorio -->
     </parent>
 
@@ -21,6 +22,8 @@
 
     <properties>
         <java.version>21</java.version>
+        <!-- Una sola versión de Lombok para la dependencia y el procesador de anotaciones -->
+        <lombok.version>1.18.48</lombok.version>
     </properties>
 
     <dependencies>
@@ -54,7 +57,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.36</version>
+            <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -113,7 +116,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.12.1</version>
+                <!-- Versión gestionada por spring-boot-starter-parent -->
                 <configuration>
                     <release>21</release>
                     <fork>true</fork>
@@ -121,7 +124,7 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>1.18.36</version>
+                            <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>

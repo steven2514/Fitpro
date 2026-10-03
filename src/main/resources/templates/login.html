@@ -26,6 +26,7 @@
             <p class="lead">Entra para ver tu plan, tus clases y tu progreso.</p>
 
             <div th:if="${param.error}" class="alert alert-error">Usuario o contraseña incorrectos</div>
+            <div th:if="${param.bloqueado}" class="alert alert-error">Demasiados intentos fallidos. Espera unos minutos antes de volver a intentarlo.</div>
             <div th:if="${param.logout}" class="alert alert-success">Sesión cerrada correctamente</div>
             <div th:if="${mensaje}" class="alert alert-success" th:text="${mensaje}"></div>
 

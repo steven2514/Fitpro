@@ -47,6 +47,8 @@ class FitproFlujosTest {
     @org.springframework.boot.test.mock.mockito.MockBean
     private com.proyecto.fitpro.service.NotificacionService notificacionService;
 
+    @Autowired private com.proyecto.fitpro.config.IntentosLoginService intentosLogin;
+
     @Autowired @Qualifier("crearPlanesIniciales") private ApplicationRunner crearPlanesIniciales;
 
     @BeforeEach
@@ -67,6 +69,8 @@ class FitproFlujosTest {
         entrenadorRepository.deleteAll();
         administradorRepository.deleteAll();
         tokenRepository.deleteAll();
+        // Las pruebas comparten IP (127.0.0.1): ningún fallo de login debe pasar a la siguiente
+        intentosLogin.registrarExito("127.0.0.1");
     }
 
     // ---------- Seguridad ----------
@@ -134,6 +138,24 @@ class FitproFlujosTest {
 
         mvc.perform(post("/login").param("username", "555").param("password", "clave-segura"))
             .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void loginSeBloqueaTrasVariosFallosSeguidos() throws Exception {
+        crearCliente("556", "clave-segura");
+
+        for (int i = 1; i < 5; i++) {
+            mvc.perform(post("/login").with(csrf()).param("username", "556").param("password", "mala-" + i))
+                .andExpect(redirectedUrl("/login?error=true"));
+        }
+        mvc.perform(post("/login").with(csrf()).param("username", "556").param("password", "mala-5"))
+            .andExpect(redirectedUrl("/login?bloqueado=true"));
+
+        // Bloqueada, ni la contraseña correcta entra
+        mvc.perform(post("/login").with(csrf()).param("username", "556").param("password", "clave-segura"))
+            .andExpect(redirectedUrl("/login?bloqueado=true"));
+        mvc.perform(get("/login").param("bloqueado", "true"))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("Demasiados intentos fallidos")));
     }
 
     @Test
@@ -435,7 +457,7 @@ class FitproFlujosTest {
 
         org.mockito.ArgumentCaptor<String> cuerpo = org.mockito.ArgumentCaptor.forClass(String.class);
         org.mockito.Mockito.verify(notificacionService)
-            .enviar(org.mockito.ArgumentMatchers.eq("ana@correo.com"), org.mockito.ArgumentMatchers.anyString(), cuerpo.capture());
+            .enviarEnSegundoPlano(org.mockito.ArgumentMatchers.eq("ana@correo.com"), org.mockito.ArgumentMatchers.anyString(), cuerpo.capture());
         java.util.regex.Matcher m = java.util.regex.Pattern.compile("/recuperar/([A-Za-z0-9_-]+)").matcher(cuerpo.getValue());
         assertTrue(m.find());
         String token = m.group(1);

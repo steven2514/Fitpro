@@ -4,7 +4,7 @@ Muchas personas quieren comenzar a ejercitarse, pero no cuentan con orientación
 
 Sistema de gestión para gimnasios, con un panel para administradores y otro para clientes.
 
-**Tecnologías:** Java 21 · Spring Boot 3.2 · Spring Security · Spring Data JPA · Thymeleaf · MySQL 8
+**Tecnologías:** Java 21 · Spring Boot 3.5 · Spring Security · Spring Data JPA · Thymeleaf · MySQL 8
 
 ## Funciones
 
@@ -38,6 +38,10 @@ Sistema de gestión para gimnasios, con un panel para administradores y otro par
 - Contraseñas cifradas con BCrypt, protección CSRF en todos los formularios y Content-Security-Policy
   estricta (sin scripts ni estilos inline).
 - Los formularios usan DTO validados: no se puede sobrescribir otra cuenta manipulando un formulario.
+- **Bloqueo por intentos fallidos**: tras 5 contraseñas incorrectas seguidas desde la misma IP, el
+  login se bloquea 15 minutos (configurable con `LOGIN_MAX_INTENTOS` y `LOGIN_MINUTOS_BLOQUEO`).
+- El correo de recuperación se envía en segundo plano: el formulario responde igual de rápido
+  exista o no la cuenta, así que no sirve para averiguar qué emails están registrados.
 - Las credenciales se leen de `.env`, que no se sube al repositorio.
 
 ## Cómo ejecutarlo
@@ -56,12 +60,25 @@ Sistema de gestión para gimnasios, con un panel para administradores y otro par
    ```bash
    ./mvnw spring-boot:run
    ```
-   Con el perfil de desarrollo (muestra el SQL y recarga las plantillas sin reiniciar):
+   Con el perfil de desarrollo (muestra el SQL, recarga las plantillas sin reiniciar y, si no hay
+   correo configurado, escribe en la consola el enlace de recuperación de contraseña):
    ```bash
    ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
    ```
 
 4. Abre <http://localhost:8082>.
+
+### En un servidor
+
+Usa el perfil `prod`: no modifica las tablas (`ddl-auto=validate`, así que deben existir ya) y la
+cookie de sesión sólo viaja por HTTPS.
+
+```bash
+./mvnw clean package
+SPRING_PROFILES_ACTIVE=prod java -jar target/fitpro-1.0.0.jar
+```
+
+Si todavía no hay HTTPS, añade `COOKIE_SEGURA=false` o el inicio de sesión no funcionará.
 
 ## Reglas de negocio
 
@@ -81,7 +98,7 @@ Sistema de gestión para gimnasios, con un panel para administradores y otro par
 ```
 
 Las pruebas usan una base H2 en memoria, así que no necesitan MySQL. Cubren la seguridad
-(CSRF, roles, sobrescritura de cuentas) y los flujos principales: suscripciones, clases, ejercicios,
+(CSRF, roles, sobrescritura de cuentas, bloqueo del login) y los flujos principales: suscripciones, clases, ejercicios,
 progreso y paginación.
 
 ## Estructura
